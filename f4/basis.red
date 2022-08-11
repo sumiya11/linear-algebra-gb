@@ -1,6 +1,9 @@
+module basis;
+% Store the Groebner basis.
 
-
-% SPair is
+% The structure SPair is implemented here.
+% SPair represents components of an S-polynomial
+% Precisely, SPair is
 %   poly1: Integer
 %   poly2: Integer
 %   lcm:   ExponentIdx
@@ -25,6 +28,7 @@ asserted procedure basis_spget_deg(sp: SPair): Degree;
 
 %--------------------------------------------------------------------------------------------------
 
+% Pairset structure. The structure to store the SPairs produced during the computation.
 % Pairset is
 %   pairs: Vector{SPair}
 %   load:  Integer
@@ -66,7 +70,7 @@ asserted procedure basis_check_enlarge_pairset(ps: Pairset, added: Integer);
 
 %--------------------------------------------------------------------------------------------------
 
-%
+% Basis structure.
 % 
 %
 asserted procedure basis_Basis(gens, coeffs, 
@@ -580,5 +584,7 @@ asserted procedure basis_export_basis_data(pairset: Pairset, off: Integer,
     end;
 
 %--------------------------------------------------------------------------------------------------
+
+endmodule; % end of basis module
 
 end;

@@ -1,3 +1,5 @@
+module hashtable;
+% Monomial hashtable.
 
 %
 %   struct Hashvalue;
@@ -629,3 +631,7 @@ asserted procedure hashtable_get_lcm(he1: ExponentIdx, he2: ExponentIdx,
     end;
 
 %--------------------------------------------------------------------------------------------------
+
+endmodule; % end of hashtable module
+
+end;

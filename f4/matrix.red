@@ -1,6 +1,6 @@
 module f4matrix;
 % The matrix used in f4 style reduction.
-%
+
 % Provides the `MacaulayMatrix` interface, which implements Macaulay matrix
 % of the folliwing structure, where A,B,C,D are sparse matrices itself.
 %        | A  B |
@@ -9,7 +9,7 @@ module f4matrix;
 %        and part CD are rows to be reduced by AB.
 %
 %
-% The matrix is implemented a list containing the following elemts:
+% The matrix is implemented a list containing the following elements:
 %   - 'matrix - convenience tag,
 %   - uprows - rows from upper, AB part of the matrix
 %   - lowrows - rows from lower, CD part of the matrix,
@@ -17,11 +17,12 @@ module f4matrix;
 %   - coeffs - rows coefficients
 %   - size - total number of allocated tows
 %   - npivots - the number of new basis elements discovered during matrix reduction
-%   nrows - number of filled rows (nrows <[ ]size]);
-
-%
-%
-
+%   - nrows - number of filled rows
+%   - ncols - number of filled columns
+%   - nup - number of upper rows (rows in AB section)
+%   - nlow - number of lower rows (rows in CD section)
+%   - nleft - number of right rows (rows in AC section)
+%   - nright - number of right rows (rows in BD section)
 
 %--------------------------------------------------------------------------------------------------
 
@@ -369,5 +370,7 @@ asserted procedure matrix_linear_algebra(ring: PolyRing, matrix: MacaulayMatrix,
     end;
 
 %--------------------------------------------------------------------------------------------------
+
+endmodule; % end of matrix module
 
 end; % of file
