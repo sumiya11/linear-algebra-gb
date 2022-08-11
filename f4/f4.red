@@ -1,7 +1,34 @@
 module f4;
 
+%--------------------------------------------------------------------------------------------------
 
-Project structure:
+% Reduce-specific:
+sizeofInt32 = 32;
+
+asserted procedure cdrn(x, n);
+    if n = 0 then
+        x
+    else
+        cdrn(cdr x, n - 1);    
+
+asserted procedure getvlast(x);
+    getv(x, length(x));
+
+%--------------------------------------------------------------------------------------------------
+
+put('f4, 'psopfn, 'f4_groebner);
+
+asserted procedure f4_groebner(u: List): List;
+begin scalar x;
+    polynomials := reval pop u;
+    ring . internalpolys := io_convert_to_internal(polynomials);
+    coeffs . exps := internalpolys;
+    basis := core_groebner(ring, coeffs, exps);
+    return io_convert_to_output(basis)
+end;
+
+
+comment Project structure:
 
 	f4.red is the interface
 
@@ -59,7 +86,7 @@ Types declarations outline:
 	
 	Basis: {ndone:Integer, ntotal: Integer, 
 				isredundant: VEctor{Int}, nonredundant: VEctor{Int},
-				leaddiv: VEctor{Int}, nlead: Integer }
+				leaddiv: VEctor{Int}, nlead: Integer };
 				
 	
 		
