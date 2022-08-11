@@ -1,3 +1,27 @@
+module f4matrix;
+% The matrix used in f4 style reduction.
+%
+% Provides the `MacaulayMatrix` interface, which implements Macaulay matrix
+% of the folliwing structure, where A,B,C,D are sparse matrices itself.
+%        | A  B |
+%        | C  D |
+% Part A contains known pivots of reducing rows,
+%        and part CD are rows to be reduced by AB.
+%
+%
+% The matrix is implemented a list containing the following elemts:
+%   - 'matrix - convenience tag,
+%   - uprows - rows from upper, AB part of the matrix
+%   - lowrows - rows from lower, CD part of the matrix,
+%   - col2hash - maps column idx {1 ... ncols} to monomial hash idx {2 ... load}
+%   - coeffs - rows coefficients
+%   - size - total number of allocated tows
+%   - npivots - the number of new basis elements discovered during matrix reduction
+%   nrows - number of filled rows (nrows <[ ]size]);
+
+%
+%
+
 
 %--------------------------------------------------------------------------------------------------
 
@@ -300,8 +324,48 @@ asserted procedure matrix_exact_sparse_rref(ring: PolyRing, matrix: MacaulayMatr
 
         newpivs := 0;
 
+        lowrows := matrix_mget_lowrows(matrix);
+        lowrows := dv_resize(lowrows, matrix_mget_nright(matrix));
+        matrix_mset_lowrows(matrix, lowrows);
 
+        bcoeffs := basis_bget_coeffs(basis);
+        mcoeffs := matrix_mget_coeffs(matrix);
 
+        for i := n1:nright do <<
+            k := ncols - i + 1;
+            if not null getv(pivs, k) <<
+                if k <= nleft then
+                    cfsref := getv(bcoeffs, getv(up2coef, k))
+                else
+                    cfsref := getv(mcoeffs, getv(low2coef, k));
+                
+                startcol := getv(getv(pivs, k), 1);
+
+                matrix_load_indexed_coefficients(densecoeffs, pivs[k], cfsref);
+                
+                result = matrix_reduce_dense_row_by_known_pivots_sparse(densecoeffs, matrix, basis, pivs, startcol, startcol, magic, nil);
+                zeroed := pop(result); 
+                newrow := pop(result); 
+                newcfs := pop(result);
+
+                putv(lowrows, newpivs, newrow);
+                putv(mcoeffs, getv(low2coef, k), newcfs);
+                putv(low2coef, k, getv(low2coef, k));
+                putv(pivs, k, getv(lowrows, newpivs))
+            >>
+        >>;
+
+        % Julia: assumption failed
+        matrix_mset_size(newpivs);
+        matrix_mset_nrows(newpivs);
+        matrix_mset_npivots(newpivs);
+        % resize problem here
+    end;
+
+asserted procedure matrix_linear_algebra(ring: PolyRing, matrix: MacaulayMatrix, basis: Basis);
+    begin scalar x;
+        % todo
+        matrix_exact_sparse_rref(ring, matrix, basis)
     end;
 
 %--------------------------------------------------------------------------------------------------
