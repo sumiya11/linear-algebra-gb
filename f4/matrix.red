@@ -364,9 +364,101 @@ asserted procedure matrix_exact_sparse_rref(ring: PolyRing, matrix: MacaulayMatr
     end;
 
 asserted procedure matrix_linear_algebra(ring: PolyRing, matrix: MacaulayMatrix, basis: Basis);
-    begin scalar x;
-        % todo
+    begin scalar coeffs;
+        coeffs := matrix_mget_coeffs(matrix);
+        % julia: fix resize
+        matrix_mset_coeffs(matrix, dv_resize(coeffs, matrix_mget_nlow(matrix)));
         matrix_exact_sparse_rref(ring, matrix, basis)
+    end;
+
+%--------------------------------------------------------------------------------------------------
+
+asserted procedure matrix_convert_hashes_to_columns(matrix: MacaulayMatrix, 
+                            symbol_ht: MonomialHashtable);
+    begin scalar hdata;
+        hdata := hashtable_htget_hashdata(symbol_ht);
+        load := hashtable_htget_load(symbol_ht);
+
+        % monoms from symbolic table represent one column in the matrix
+
+        col2hash := dv_undef(load - 1);
+        j := 1;
+        k := 0;
+        for i := hashtable_htget_offset(symbol_ht):load do <<
+            putv(col2hash, j, i);
+            j := j + 1;
+
+            % meaning the column is pivoted
+            if hashtable_hvget_idx(getv(hdata, i)) = 2 then
+                k := k + 1
+        >>;
+
+        % sort columns
+        sorting_sort_columns_by_hash(col2hash, symbol_ht);
+
+        matrix_mset_nleft(matrix, k);
+        % -1 as long as hashtable load is always 1 more than actual
+        matrix_mset_nright(matrix, load - k - 1);
+
+        % store the other direction of mapping,
+        % hash -> column
+        for k := 1:length(col2hash) do
+            hashtable_hvget_idx(getv(hdata, getv(col2hash, k)), k);
+        
+        nterms := 0;
+        uprows := matrix_mget_uprows(matrix);
+        for k := 1:matrix_mget_nup(matrix) do <<
+            row := getv(uprows, k);
+
+            for j := 1:length(row) do
+                putv(row, j, hashtable_hvget_idx(getv(hdata, getv(row, j))));
+            
+            nterms := nterms + length(row)
+        >>;
+
+        lowrows := matrix_mget_lowrows(matrix);
+        for k := 1:matrix_mget_nlow(matrix) do <<
+            row := getv(lowrows, k);
+
+            for j := 1:length(row) do
+                putv(row, j, hashtable_hvget_idx(getv(hdata, getv(row, j))));
+            
+            nterms := nterms + length(row)
+        >>;
+
+        matrix_mset_ncols(matrix, matrix_mget_nleft(matrix) + matrix_mget_nright(matrix));
+
+        % Julia: asserts
+
+        matrix_mset_col2hash(matrix, col2hash)
+    end;
+
+%--------------------------------------------------------------------------------------------------
+
+asserted procedure matrix_convert_hashes_to_columns(matrix: MacaulayMatrix, 
+                            basis: Basis, ht: MonomialHashtable, symbol_ht: MonomialHashtable);
+    begin scalar rows;
+        basis_check_enlarge_basis(basis, matrix_mget_npivots(matrix));
+
+        rows := matrix_mget_lowrows(matrix);
+        crs := basis_bget_ndone(basis);
+
+        bcoeffs := basis_bget_coeffs(basis);
+        bgens := basis_bget_gens(basis);
+
+        mcoeffs := matrix_mget_coeffs(matrix);
+        low2coef := matrix_mget_low2coef(matrix);
+
+        for i := 1:matrix_mget_npivots(matrix) do <<
+            colidx := getv(getv(row, i), 1);
+            % Julia: 
+            hashtable_insert_in_basis_hash_table_pivots(getv(row, i), ht, symbol_ht, matrix_mget_col2hash(matrix));
+
+            putv(bcoeffs, crs + i, getv(mcoeffs, getv(low2coef, colidx)));
+            putv(bgens, crs + i, getv(rows, i))
+        >>;
+
+        basis_bset_ntotal(basis, basis_bget_ntotal(basis) + matrix_mget_npivots(matrix))
     end;
 
 %--------------------------------------------------------------------------------------------------
