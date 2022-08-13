@@ -12,6 +12,7 @@ module basis;
 % Immutable
 asserted procedure basis_SPair(poly1: Integer, poly2: Integer, 
                         lcmj: ExponentIdx, deg: Degree): SPair;
+    % use vector!
     {'sp, poly1, poly2, lcmj, deg};
 
 asserted procedure basis_spget_poly1(sp: SPair): Integer;
@@ -133,7 +134,7 @@ asserted procedure basis_bset_nlead(b: Basis, x);
     car cdrn(b, 9) := x;
 
 % Core structure that stores basis generators and some additional info
-asserted procedure basis_initializeBasis(ring: PolyRing, ngens: Integer): Basis;
+asserted procedure basis_initialize_basis(ring: PolyRing, ngens: Integer): Basis;
     begin scalar sz;
         sz := ngens * 2;
         ndone := 0;

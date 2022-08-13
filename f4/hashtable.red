@@ -28,6 +28,18 @@ asserted procedure hashtable_hvget_idx(hv: Hashvalue): Integer;
 asserted procedure hashtable_hvget_deg(hv: Hashvalue): Degree;
     caddddr hv; 
 
+asserted procedure hashtable_hvset_hash(hv: Hashvalue, x): ExponentHash;
+    cadr hv; 
+
+asserted procedure hashtable_hvset_divmask(hv: Hashvalue, x): DivisionMask;
+    caddr hv; 
+
+asserted procedure hashtable_hvset_idx(hv: Hashvalue, x): Integer;
+    cadddr hv; 
+
+asserted procedure hashtable_hvset_deg(hv: Hashvalue, x): Degree;
+    caddddr hv; 
+
 asserted procedure hashtable_copy_hashvalue(hv: Hashvalue): Hashvalue;
     hashtable_Hashvalue(
         hashtable_hvget_hash(hv),
@@ -590,9 +602,9 @@ asserted procedure hashtable_insert_multiplied_poly_in_hash_table(
     end;
 
 % Julia: invalid parameter "load";
-% solution: switched from name "load" to "l"
-asserted procedure hashtable_symbolic_ht_needscale(l: Integer, added: Integer, size: Integer);
-    1.4*(l + added) >= size;
+% solution: switched from name "load" to "load_"
+asserted procedure hashtable_symbolic_ht_needscale(load_: Integer, added: Integer, size: Integer);
+    1.4*(load_ + added) >= size;
 
 asserted procedure hashtable_multiplied_poly_to_matrix_row(
                 symbolic_ht: MonomialHashtable, basis_ht: MonomialHashtable, 
