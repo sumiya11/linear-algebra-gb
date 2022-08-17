@@ -12,6 +12,10 @@ struct DynamicVector;
 asserted procedure dv_undef(n: Integer): DynamicVector;
     mkvect(n);
 
+% Length of vector x
+asserted procedure dv_length(v: DynamicVector): Integer;
+    upbv(v);
+
 % Vector of size n filled with zeros
 asserted procedure dv_zeros(n): DynamicVector;
     begin scalar v;
