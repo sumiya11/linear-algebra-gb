@@ -1,4 +1,4 @@
-module groebner;
+module f4groebner;
 % Groebner basis computation. Contains a wrapper for f4 algorithm
 
 %--------------------------------------------------------------------------------------------------
@@ -6,9 +6,9 @@ module groebner;
 % Select the optimal size of hashtable
 asserted procedure groebner_select_tablesize(ring: PolyRing, exps: Vector): Integer;
     begin scalar nvars;
-        % Julia: for now, we want only 16 elements for debugging purposes
-        nvars := io_pr_nvars(ring);
-        return 16
+        % Julia: for now, we want only 8 elements for debugging purposes
+        nvars := io_prget_nvars(ring);
+        return 8
     end;
 
 %--------------------------------------------------------------------------------------------------
@@ -17,17 +17,26 @@ asserted procedure groebner_select_tablesize(ring: PolyRing, exps: Vector): Inte
 %   . ring - a polynomial ring 
 %   . exps - a list of polynomials' terms (not hashed)
 %   . coeffs - a list of polynomials' coefficients
-asserted procedure groebner_groebner(ring: PolyRing, exps: List, coeffs: List): List;
+asserted procedure groebner_groebner(ring: PolyRing, exps: Vector, coeffs: Vector): List;
     begin scalar tablesize, basis, ht, gbexps;
         
         % select hashtable size
         tablesize := groebner_select_tablesize(ring, exps);
         
+        if f4_debug() then
+            prin2t {"Hashtable size: ", tablesize};
+
         basis . ht := f4_initialize_structures(ring, exps, coeffs, tablesize);
         
         f4_f4(ring, basis, ht, nil);
         
-        gbexps := f4_hash_to_exponents(basis, ht);
+        gbexps := basis_hash_to_exponents(basis, ht);
+
+        if f4_debug() then <<
+            prin2t {"After f4: ", basis};
+            prin2t {"exps : ", gbexps}
+        >>;
+
         return gbexps . basis_bget_coeffs(basis)
     end;
 

@@ -1,4 +1,4 @@
-module dv;
+module f4dv;
 % Dynamic Vector.
 % Implements DynamicVector interface.
 
@@ -27,7 +27,7 @@ asserted procedure dv_zeros(n): DynamicVector;
 
 % Vector of size equal to size of `x`
 asserted procedure dv_similar(x): DynamicVector;
-    dv_undef(length(x));
+    dv_undef(dv_length(x));
 
 % Resize vector x to be of length n;
 % 
@@ -38,10 +38,10 @@ asserted procedure dv_similar(x): DynamicVector;
 % and the first n elements from x are copied to the beginning of new array
 asserted procedure dv_resize(x, n): DynamicVector;
     begin scalar v;
-        if length(x) = n then
+        if dv_length(x) = n then
             return x;
         v := dv_undef(n);
-        for i := 1:min(n, length(x)) do
+        for i := 1:min(n, dv_length(x)) do
             putv(v, i, getv(x, i));
         return v
     end;
@@ -50,10 +50,12 @@ asserted procedure dv_resize(x, n): DynamicVector;
 asserted procedure dv_resizezeros(x, n): DynamicVector;
     begin scalar v;
         v := dv_resize(x, n);
-        if n > length(x) then
-            for i := length(x)+1:n do
+        if n > dv_length(x) then
+            for i := dv_length(x)+1:n do
                 putv(v, i, 0);
         return v 
     end;
+
+endmodule; % end of dv module
 
 end;

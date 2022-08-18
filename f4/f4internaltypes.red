@@ -1,4 +1,5 @@
-
+module f4internaltypes;
+% 
 
 %--------------------------------------------------------------------------------------------------
 
@@ -31,8 +32,6 @@ struct ColumnIdx; % = Int32
 
 %--------------------------------------------------------------------------------------------------
 
-struct PolyRing;
-
-struct MacaulayMatrix;
+endmodule; % end of internaltypes module
 
 end;
