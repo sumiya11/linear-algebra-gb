@@ -54,7 +54,7 @@ create!-package('(f4 f4groebner f4f4 f4hashtable f4basis f4matrix f4sorting f4in
 %--------------------------------------------------------------------------------------------------
 
 asserted procedure f4_debug();
-    nil;
+    t;
 
 % Julia: Reduce-specific things;
 %   As we want to mirror the behavior of Julia with integer division masks as close as possible,

@@ -48,7 +48,8 @@ asserted procedure io_prset_ord(pr: PolyRing, x);
 
 % list of lp --> {ring, vector of vectors of monons, vector of vectors of coeffs}
 asserted procedure io_convert_to_internal(polys: List, vars: List, ord: Any): Vector;
-    begin scalar n, gens, coeffs, ring, i, gensi, coeffsi;
+    begin scalar n, gens, coeffs, ring, i, gensi, coeffsi, 
+                    gensij, explen, gensij_list;
         
         if f4_debug() then
             prin2t "convert_to_internal..";
@@ -63,6 +64,8 @@ asserted procedure io_convert_to_internal(polys: List, vars: List, ord: Any): Ve
 
         % Julia!!
         poly_initRing('list . vars, ord);
+
+        explen := io_prget_explen(ring);
 
         i := 1;
         for each poly in polys do <<
@@ -80,8 +83,14 @@ asserted procedure io_convert_to_internal(polys: List, vars: List, ord: Any): Ve
             coeffsi := f4_list2vector(coeffsi);
             putv(gens, i, gensi);
             putv(coeffs, i, coeffsi);
-            for j := 1:dv_length(gensi) do
-                putv(gensi, j, f4_list2vector(getv(gensi, j)));
+            for j := 1 : dv_length(gensi) do <<
+                gensij_list := getv(gensi, j);
+                gensij := dv_undef(explen);
+                putv(gensij, explen, pop(gensij_list));
+                for k := 1 : explen-1 do
+                    putv(gensij, k, pop(gensij_list));
+                putv(gensi, j, gensij)
+            >>;
             i := i + 1
         >>;
         
@@ -98,7 +107,7 @@ asserted procedure io_convert_to_output(ring: PolyRing, bexps: Vector, bcoeffs: 
         for i := 1:dv_length(bexps) do <<
             bexpsi := getv(bexps, i);
             bexpsi := for j := 1:dv_length(bexpsi) collect
-                (for k := 1:io_prget_explen(ring) collect 
+                (f4_getvlast(getv(bexpsi, j)) . for k := 1:io_prget_explen(ring)-1 collect 
                     getv(getv(bexpsi, j), k));
             bcoeffsi := for j := 1:dv_length(getv(bcoeffs, i)) collect
                 getv(getv(bcoeffs, i), j);

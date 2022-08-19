@@ -304,7 +304,7 @@ asserted procedure basis_update_pairset(
         % traverse new pairs to check for redundancy
         isred := basis_bget_isred(basis);
         j := 1;
-        for i := 1:bl-1 do <<
+        for i := 1 : bl-1 do <<
             if getv(isred, i) = 0 then <<
                 putv(ps, pl + j, getv(ps, pl + i));
                 j := j + 1
@@ -313,26 +313,27 @@ asserted procedure basis_update_pairset(
 
         sorting_sort_pairset_by_degree(pairset, pl + 1, j - 2);
 
-        for i := 1:j-1 do
+        for i := 1 : j-1 do
             putv(plcm, i, basis_spget_lcmj(getv(ps, pl + i)));
         putv(plcm, j, 0);
         pc := j;
         pc := pc - 1;
 
-        for j := 1:pc do
+        for j := 1 : pc do
             if getv(plcm, j) > 0 then
                 hashtable_check_monomial_division_in_update(plcm, j + 1, pc, getv(plcm, j), update_ht);
 
         % remove useless pairs from pairset
         % by moving them to the end
         j := 1;
-        for i := 1:basis_psget_load(pairset) do <<
-            if not (basis_spget_lcmj(getv(ps, i)) = 0) then <<
+        for i := 1 : basis_psget_load(pairset) do <<
+            if basis_spget_lcmj(getv(ps, i)) neq 0 then <<
                 putv(ps, j, getv(ps, i));
                 j := j + 1
             >>
         >>;
 
+        % assure that basis hashtable can store new lcms
         if hashtable_htget_size(ht) - hashtable_htget_load(ht) <= pc then
             hashtable_enlarge_hash_table(ht);
         
@@ -374,7 +375,7 @@ asserted procedure basis_update_basis(basis: Basis, ht: MonomialHashtable, updat
         htdata := hashtable_htget_hashdata(ht);
         for i := basis_bget_ndone(basis)+1:basis_bget_ntotal(basis) do
             if getv(isred, i) = 0 then <<
-                putv(lead, k, hashtable_hvget_divmask(getv(ht, getv(getv(gens, i), 1))));
+                putv(lead, k, hashtable_hvget_divmask(getv(htdata, getv(getv(gens, i), 1))));
                 putv(nonred, k, i);
                 k := k + 1
             >>;
@@ -388,7 +389,7 @@ asserted procedure basis_is_redundant(pairset: Pairset, basis: Basis,
                         ht: MonomialHashtable, update_ht: MonomialHashtable, 
                         idx: Integer);
     begin scalar gens, htdata, isred, ps, lead_new, lead_deg,
-                    toreturn, lead_i, lcm_new, psidx;
+                    result, lead_i, lcm_new, psidx;
 
         if 2 * hashtable_htget_load(update_ht) > hashtable_htget_size(update_ht) then
             hashtable_enlarge_hash_table(update_ht);
@@ -404,10 +405,10 @@ asserted procedure basis_is_redundant(pairset: Pairset, basis: Basis,
         % degree of lead
         lead_deg := hashtable_hvget_deg(getv(htdata, lead_new));
 
-        toreturn := nil;
+        result := nil;
 
         for i := idx+1:basis_bget_ntotal(basis) do <<
-            if not (getv(isred, i) = 1) then <<
+            if (i neq idx) and (getv(isred, i) neq 1) then <<
                 
                 lead_i := getv(getv(gens, i), 1);
 
@@ -420,14 +421,13 @@ asserted procedure basis_is_redundant(pairset: Pairset, basis: Basis,
                     putv(isred, idx, 1);
                     basis_psset_load(pairset, basis_psget_load(pairset) + 1);
 
-                    toreturn := t;
-                    % Julia: return true
-                    i := basis_bget_ntotal(basis)
+                    result := t;
+                    go to Return_
                 >>
             >>
         >>;
-
-        return toreturn
+    Return_:
+        return result
     end;
 
 %--------------------------------------------------------------------------------------------------
@@ -454,7 +454,7 @@ asserted procedure basis_update(pairset: Pairset, basis: Basis,
         
         if basis_bget_ndone(basis) + 1 <= basis_bget_ntotal(basis) then <<
             % for each new element in basis
-            for i := basis_bget_ndone(basis)+1:basis_bget_ntotal(basis) do <<
+            for i := basis_bget_ndone(basis)+1 : basis_bget_ntotal(basis) do <<
                 % check redundancy of new poly
                 if not basis_is_redundant(pairset, basis, ht, update_ht, i) then <<
                     % Julia: plcm = resize
@@ -551,6 +551,7 @@ asserted procedure basis_standardize_basis(ring: PolyRing, basis: Basis,
             prin2t {"In standardize, just before sort", basis};
 
         sorting_sort_gens_by_lead_increasing_in_standardize(basis, ht, ord);
+        
         return basis_normalize_basis(ring, basis)
     end;
 
@@ -627,57 +628,67 @@ asserted procedure basis_insert_plcms_in_basis_hash_table(pairset: Pairset, offj
         m := ifirst;
         l := 1;
     Letsgo:
-        while l < ilast do begin
+        while l < ilast do begin    
+            if getv(plcm, l) = 0 then <<
+                l := l + 1;
+                go to Letsgo
+            >>;
+            
             genspoly1 := getv(getv(gens, basis_spget_poly1(getv(ps, offj+l))), 1);
             genspoly2 := getv(getv(gens, basis_spget_poly2(getv(ps, offj+1))), 1);
+
+            if hashtable_is_gcd_const(genspoly1, genspoly2, ht) then <<
+                l := l + 1;
+                go to Letsgo
+            >>;
+
+            putv(ps, m, getv(ps, offj + l));
+
+            h := hashtable_hvget_hash(getv(upddata, getv(plcm, l)));
+            putv(htexps, hashtable_htget_load(ht) + 1, copy(getv(updexps, getv(plcm, l))));
+            n := getv(htexps, hashtable_htget_load(ht) + 1);
+
+            k := h;
+            i := 1;
+        Restart:
+            while i <= hashtable_htget_size(ht) do <<
+                k := hashtable_hashnextindex(h, i, modj);
+                hm := getv(httable, k);
+                
+                if hm = 0 then
+                    go to Break;
+                    
+                if hashtable_hvget_hash(getv(htdata, hm)) neq h then
+                    i := i + 1
+                else <<
+                    ehm := getv(htexps, hm);
+                    
+                    for j := 1:explen do
+                        if getv(ehm, j) neq getv(n, j) then <<
+                            i := i + 1;
+                            go to Restart
+                        >>;
+                    
+                    putv(ps, m, basis_SPair(basis_spget_poly1(getv(ps, m)), basis_spget_poly2(getv(ps, m)), hm, hashtable_hvget_deg(getv(ps, m))));
+                    m := m + 1;
+                    l := l + 1;
+                    go to Letsgo
+                >>
+            >>;
+        Break:
+        
+            pos := hashtable_htget_load(ht) + 1;
+            putv(httable, k, pos);
             
-            if getv(plcm, l) = 0 or hashtable_is_gcd_const(genspoly1, genspoly2, ht) then
-                l := l + 1
-            else begin
-                putv(ps, m, getv(ps, offj + l));
+            uhd := hashtable_htget_hashdata(update_ht);
 
-                h := hashtable_hvget_hash(getv(upddata, getv(plcm, l)));
-                putv(htexps, hashtable_htget_load(ht) + 1, copy(getv(updexps, getv(plcm, l))));
-                n := getv(htexps, hashtable_htget_load(ht) + 1);
+            ll := getv(plcm, l);
+            putv(htdata, pos, hashtable_Hashvalue(h, hashtable_hvget_divmask(getv(uhd, ll)), 0, hashtable_hvget_deg(getv(uhd, ll))));
 
-                k := h;
-                i := 1;
-            Restart:
-                while i <= hashtable_htget_size(ht) do <<
-                    k := hashtable_hashnextindex(h, i, modj);
-                    hm := getv(httable, k);
-                    if hm = 0 then
-                        i := hashtable_htget_size(ht) + 1
-                    else <<
-                        if not (hashtable_hvget_hash(getv(htdata, hm)) = h) then
-                            i := i + 1
-                        else <<
-                            ehm := getv(htexps, hm);
-                            
-                            for j := 1:explen do
-                                if not (getv(ehm, j) = getv(n, j)) then <<
-                                    i := i + 1;
-                                    go to Restart
-                                >>;
-                            
-                            putv(ps, m, basis_SPair(basis_spget_poly1(getv(ps, m)), basis_spget_poly2(getv(ps, m)), hm, hashtable_hvget_deg(getv(ps, m))));
-                            m := m + 1;
-                            l := l + 1;
-                            go to Letsgo
-                        >>
-                    >>
-                >>;
-            
-                pos := hashtable_htget_load(ht) + 1;
-                putv(httable, k, pos);
-                ll := getv(plcm, l);
-                putv(htdata, pos, hashtable_Hashvalue(h, hashtable_hvget_divmask(getv(upddata, ll)), 0, hashtable_hvget_deg(getv(upddata, ll))));
-
-                hashtable_htset_load(ht, hashtable_htget_load(ht) + 1);
-                putv(ps, m, basis_SPair(basis_spget_poly1(getv(ps, m)), basis_spget_poly2(getv(ps, m)), pos, basis_spget_deg(getv(ps, m))));
-                m := m + 1;
-                l := l + 1
-            end
+            hashtable_htset_load(ht, hashtable_htget_load(ht) + 1);
+            putv(ps, m, basis_SPair(basis_spget_poly1(getv(ps, m)), basis_spget_poly2(getv(ps, m)), pos, basis_spget_deg(getv(ps, m))));
+            m := m + 1;
+            l := l + 1
         end;
         
         basis_psset_load(pairset, m - 1)

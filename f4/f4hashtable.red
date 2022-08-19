@@ -352,7 +352,7 @@ asserted procedure hashtable_reinitialize_hash_table(ht: MonomialHashtable, size
 % doubles the size of storage in `ht`,
 % and rehashes all elements
 asserted procedure hashtable_enlarge_hash_table(ht: MonomialHashtable);
-    begin scalar htsize, modj, he, hidx, j, htdata, httable;
+    begin scalar htsize, flag, modj, he, hidx, htdata, httable;
         htsize := hashtable_htget_size(ht) * 2;
         hashtable_htset_size(ht, htsize);
         hashtable_htset_hashdata(ht, dv_resize(hashtable_htget_hashdata(ht), htsize));
@@ -364,18 +364,19 @@ asserted procedure hashtable_enlarge_hash_table(ht: MonomialHashtable);
         httable := hashtable_htget_hashtable(ht);
 
         modj := htsize - 1;
-        for i := hashtable_htget_offset(ht):hashtable_htget_load(ht) do <<
+        for i := hashtable_htget_offset(ht) : hashtable_htget_load(ht) do <<
             % hash for this elem is already computed
             he := hashtable_hvget_hash(getv(htdata, i));
             hidx := he;
+            flag := t;
             for j := 1:htsize do <<
                 hidx := hashtable_hashnextindex(he, j, modj);
-                if getv(httable, hidx) = 0 then <<
+                if flag and getv(httable, hidx) = 0 then <<
                     putv(httable, hidx, i);
-                    j := htsize
+                    flag := nil
                 >>
             >>
-        >>
+        >>    
     end;
 
 %--------------------------------------------------------------------------------------------------
@@ -394,7 +395,7 @@ asserted procedure hashtable_insert_in_hash_table(ht: MonomialHashtable, e: Expo
         for i := 1:htexplen do
             he := he + getv(hasher, i)*getv(e, i);
         
-        if f4_debug() then <<
+        if f4_debug() and nil then <<
             prin2t {"insert_in_hash_table: Hash computed: ", he};
             prin2t {"insert_in_hash_table: ht:", ht}
         >>;
@@ -417,7 +418,7 @@ asserted procedure hashtable_insert_in_hash_table(ht: MonomialHashtable, e: Expo
             hidx := hashtable_hashnextindex(he, i, modj);
             vidx := getv(httable, hidx);
 
-            if f4_debug() then
+            if f4_debug() and nil then
                 prin2t {"insert_in_hash_table: hidx: ", hidx, ", vidx:", vidx};
 
             % if not free
@@ -442,17 +443,15 @@ asserted procedure hashtable_insert_in_hash_table(ht: MonomialHashtable, e: Expo
             go to Return_
         >>;
     Break:
-        % if f4_debug() then
-        %     prin2t {"insert_in_hash_table: toreturn: ", toreturn};
         
         % add its position to hashtable, and insert exponent to that position
         vidx := hashtable_htget_load(ht) + 1;
         putv(httable, hidx, vidx);
 
-        if f4_debug() then
+        if f4_debug() and nil then
             prin2t {"insert_in_hash_table: vidx: ", vidx};
 
-        putv(htexps, vidx, copy(e));
+        putv(htexps, vidx, dv_similar(e));
         ve := getv(htexps, vidx);
         for i := 1 : dv_length(e) do
             putv(ve, i, getv(e, i));
@@ -460,7 +459,7 @@ asserted procedure hashtable_insert_in_hash_table(ht: MonomialHashtable, e: Expo
         divmask := hashtable_generate_monomial_divmask(e, ht);
         putv(htdata, vidx, hashtable_Hashvalue(he, divmask, 0, f4_getvlast(e)));
 
-        if f4_debug() then
+        if f4_debug() and nil then
             prin2t {"insert_in_hash_table: divmask: ", divmask};
 
         hashtable_htset_load(ht, hashtable_htget_load(ht) + 1);
@@ -548,38 +547,43 @@ asserted procedure hashtable_generate_monomial_divmask(e: ExponentVector, ht: Mo
 
 % h1 divisible by h2
 asserted procedure hashtable_is_monom_divisible(h1: ExponentIdx, h2: ExponentIdx, ht: MonomialHashtable): Bool;
-    begin scalar htdata, e1, e2, toreturn, htexps;
+    begin scalar htdata, e1, e2, result, htexps;
         htdata := hashtable_htget_hashdata(ht);
 
-        if not (land(hashtable_hvget_divmask(getv(htdata, h2)), lnot(hashtable_hvget_divmask(getv(htdata, h2)))) = 0) then
-            return nil;
+        % if not (land(hashtable_hvget_divmask(getv(htdata, h2)), lnot(hashtable_hvget_divmask(getv(htdata, h2)))) = 0) then
+        %     return nil;
 
         htexps := hashtable_htget_exponents(ht);
         e1 := getv(htexps, h1);
         e2 := getv(htexps, h2);
 
         % Julia
-        toreturn := t;
+        result := t;
         for i := 1:hashtable_htget_explen(ht) do
-            if getv(e1, i) < getv(e2, i) then
-                toreturn := nil;
+            if getv(e1, i) < getv(e2, i) then <<
+                result := nil;
+                go to Return_
+            >>;
 
-        return toreturn
+    Return_:
+        return result
     end;
 
 asserted procedure hashtable_is_gcd_const(h1: ExponentIdx, h2: ExponentIdx, ht: MonomialHashtable): Bool;
-    begin scalar htexps, e1, e2, toreturn;
+    begin scalar htexps, e1, e2, result;
         htexps := hashtable_htget_exponents(ht);
         e1 := getv(htexps, h1);
         e2 := getv(htexps, h2);
 
-        toreturn := t;
-        % TODO: go to!!
+        result := t;
         for i := 1:hashtable_htget_explen(ht)-1 do
-            if (not (getv(e1, i) = 0)) and (not (getv(e2, i) = 0)) then
-                toreturn := nil;
+            if (not (getv(e1, i) = 0)) and (not (getv(e2, i) = 0)) then <<
+                result := nil;
+                go to Return_
+            >>;
 
-        return toreturn
+    Return_:
+        return result
     end;
 
 %--------------------------------------------------------------------------------------------------
@@ -601,25 +605,28 @@ asserted procedure hashtable_check_monomial_division_in_update(
     Restart:
         while j <= last do <<
             % if bad lcm
-            if getv(a, j) = 0 then
-                j := j + 1
-            else <<
-                % fast division check
-                if not (land(lnot(hashtable_hvget_divmask(getv(htdata, getv(a, j)))), divmask) = 0) then
-                    j := j + 1
-                else <<
-                    ea := getv(htexps, getv(a, j));
-                    for i := 1:hashtable_htget_explen(ht) do <<
-                        if getv(ea, i) < getv(lcmexp, i) then <<
-                            j := j + 1;
-                            go to Restart
-                        >>
-                    >>;
-                    % mark as redundant
-                    putv(a, j, 0)
+            if getv(a, j) = 0 then <<
+                j := j + 1;
+                go to Restart
+            >>;
+            
+            % fast division check
+            if land(lnot(hashtable_hvget_divmask(getv(htdata, getv(a, j)))), divmask) neq 0 then <<
+                j := j + 1;
+                go to Restart
+            >>;
+
+            ea := getv(htexps, getv(a, j));
+            for i := 1:hashtable_htget_explen(ht) do <<
+                if getv(ea, i) < getv(lcmexp, i) then <<
+                    j := j + 1;
+                    go to Restart
                 >>
-            >>
-        >>
+            >>;
+            % mark as redundant
+            putv(a, j, 0)
+        >>;
+
     end;
 
 %--------------------------------------------------------------------------------------------------
@@ -647,6 +654,12 @@ asserted procedure hashtable_insert_multiplied_poly_in_hash_table(
         sdata := hashtable_htget_hashdata(symbol_ht);
         stable := hashtable_htget_hashtable(symbol_ht);
 
+        if f4_debug() then <<
+            prin2t {"INSERTING", poly, "MULTIPLIED BY", etmp, "TO SYM HASHTABLE:"};
+            prin2t {"hash(etmp) = ", htmp};
+            prin2t symbol_ht
+        >>;
+
         l := 1;
     Letsgo:
         while l <= len do begin
@@ -664,6 +677,12 @@ asserted procedure hashtable_insert_multiplied_poly_in_hash_table(
 
             lastidx := hashtable_htget_load(symbol_ht) + 1;
 
+            if f4_debug() then <<
+                prin2t {"MONOMIAL", e, "WITH HASH h = htmp + hash(e)"};
+                prin2t {"hash(e) = ", hashtable_hvget_hash(getv(bdata, getv(poly, l)))};
+                prin2t {"htmp = ", htmp, "; h = ", h}
+            >>;
+
             enew := getv(sexps, 1);
             
             % multiplied monom exponent
@@ -679,29 +698,32 @@ asserted procedure hashtable_insert_multiplied_poly_in_hash_table(
             while i <= hashtable_htget_size(symbol_ht) do <<
                 k := hashtable_hashnextindex(h, i, modj);
 
-                vidx := getv(btable, k);
+                vidx := getv(stable, k);
                 % if index is free
                 if vidx = 0 then
-                    i := hashtable_htget_size(symbol_ht)
-                else <<
-                    % if different exponent is stored here
-                    if not (hashtable_hvget_hash(getv(bdata, vidx)) = h) then
-                        i := i + 1
-                    else <<
-                        estored := getv(sexps, vidx);
-                        for j := 1:explen do <<
-                            % hash collision, restarting the search
-                            if not (getv(estored, j) = getv(enew, j)) then <<
-                                i := i + 1;
-                                go to Restart
-                            >>
-                        >>
-                    >>;
-                    putv(row, l, vidx);
-                    l := l + 1;
-                    go to Letsgo
-                >>
+                    go to Break;
+
+                % if different exponent is stored here
+                if hashtable_hvget_hash(getv(sdata, vidx)) neq h then <<
+                    i := i + 1;
+                    go to Restart
+                >>;
+
+                estored := getv(sexps, vidx);
+                for j := 1:explen do <<
+                    % hash collision, restarting the search
+                    if getv(estored, j) neq getv(enew, j) then <<
+                        i := i + 1;
+                        go to Restart
+                    >>
+                >>;
+                
+                putv(row, l, vidx);
+                l := l + 1;
+
+                go to Letsgo
             >>;
+        Break:
 
             % add multiplied exponent to hash table
             if null getv(sexps, lastidx) then
@@ -738,7 +760,7 @@ asserted procedure hashtable_multiplied_poly_to_matrix_row(
 
         row := dv_similar(poly);
         htload := hashtable_htget_load(symbol_ht);
-        while hashtable_symbolic_ht_needscale(htload, upbv(poly), hashtable_htget_size(symbol_ht)) do
+        while hashtable_symbolic_ht_needscale(htload, dv_length(poly), hashtable_htget_size(symbol_ht)) do
             hashtable_enlarge_hash_table(symbol_ht);
         
         return hashtable_insert_multiplied_poly_in_hash_table(row, htmp, etmp, poly, basis_ht, symbol_ht)
@@ -786,23 +808,23 @@ asserted procedure hashtable_insert_in_basis_hash_table_pivots(
                 hm := getv(bhash, k);
 
                 if hm = 0 then 
-                    i := hashtable_htget_size(ht) + 1
+                    go to Break;
+
+                if hashtable_hvget_hash(getv(bdata, hm)) neq h then
+                    i := i + 1
                 else <<
-                    if not (hashtable_hvget_hash(getv(bdata, hm)) = h) then
-                        i := i + 1
-                    else <<
-                        ehm := getv(bexps, hm);
-                        for j := 1:explen do
-                            if not (getv(e, j) = getv(ehm, i)) then <<
-                                i := i + 1;
-                                go to Restart
-                            >>;
-                        putv(row, l, hm);
-                        l := l + 1;
-                        go to Letsgo
-                    >>
+                    ehm := getv(bexps, hm);
+                    for j := 1:explen do
+                        if not (getv(e, j) = getv(ehm, i)) then <<
+                            i := i + 1;
+                            go to Restart
+                        >>;
+                    putv(row, l, hm);
+                    l := l + 1;
+                    go to Letsgo
                 >>
             >>;
+        Break:
 
             pos := lastidx;
             putv(bhash, k, pos);

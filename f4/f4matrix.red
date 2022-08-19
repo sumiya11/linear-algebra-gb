@@ -175,7 +175,7 @@ asserted procedure matrix_reinitialize_matrix(matrixj: MacaulayMatrix, npairs: I
 %--------------------------------------------------------------------------------------------------
 
 % Normalize `row` by first coefficient
-asserted procedure matrix_normalize_sparse_row(row: Vector, ch): Vector;
+asserted procedure matrix_normalize_sparse_row(row: Vector): Vector;
     begin scalar pinv;
         pinv := denr(getv(row, 1)) ./ numr(getv(row, 1));
         for i := 2:dv_length(row) do
@@ -210,7 +210,7 @@ asserted procedure matrix_load_indexed_coefficients(densecoeffs: Vector, rowexps
 
 %--------------------------------------------------------------------------------------------------
 
-asserted procedure reduce_dense_row_by_known_pivots_sparse(densecoeffs: Vector, 
+asserted procedure matrix_reduce_dense_row_by_known_pivots_sparse(densecoeffs: Vector, 
                         matrixj: matrixj, basis: Basis, pivs: Vector, startcol: ColumnIdx,
                         tmp_pos: ColumnIdx, exact_colmap: Bool);
     begin scalar ncols, nleft, mcoeffs, up2coef, low2coef, bcoeffs, k, uzero,
@@ -227,7 +227,7 @@ asserted procedure reduce_dense_row_by_known_pivots_sparse(densecoeffs: Vector,
 
         % new row nonzero elements count
         k := 0;
-        uzero := nil . 1;
+        uzero := nil ./ 1;
 
         % new pivot index
         np := -1;
@@ -235,8 +235,8 @@ asserted procedure reduce_dense_row_by_known_pivots_sparse(densecoeffs: Vector,
         for i := startcol:ncols do <<
 
             % if row element zero - no reduction
-            if not (getv(densecoeffs, i) = uzero) then <<
-                if null getv(pivs, i) or ((not (tmp_pos = -1)) and tmp_pos = i) then <<
+            if getv(densecoeffs, i) neq uzero then <<
+                if null getv(pivs, i) or ((tmp_pos neq -1) and (tmp_pos = i)) then <<
                     if np = -1 then
                         np := i;
                     k := k + 1
@@ -266,9 +266,9 @@ asserted procedure reduce_dense_row_by_known_pivots_sparse(densecoeffs: Vector,
         
         % store new row in sparse format
         % where k - number of structural nonzeros in new reduced row, k > 0
-        j := 1
+        j := 1;
         for i := np:ncols do <<  % from new pivot
-            if not (getv(densecoeffs, i) = uzero) then <<
+            if getv(densecoeffs, i) neq uzero then <<
                 putv(newrow, j, i);
                 putv(newcfs, j, getv(densecoeffs, i));
                 j := j + 1
@@ -290,7 +290,7 @@ asserted procedure matrix_exact_sparse_rref(ring: PolyRing, matrixj: MacaulayMat
         nleft := matrix_mget_nleft(matrixj);
 
         uprows := matrix_mget_uprows(matrixj);
-        lowrows := matrix_mget_low(matrixj);
+        lowrows := matrix_mget_lowrows(matrixj);
         low2coef := matrix_mget_low2coef(matrixj);
         up2coef := matrix_mget_up2coef(matrixj);
 
@@ -354,9 +354,14 @@ asserted procedure matrix_exact_sparse_rref(ring: PolyRing, matrixj: MacaulayMat
                 % guaranteed to be from lower part
                 putv(low2coef, getv(newrow, 1), i);
 
-                if not (getv(getv(mcoeffs, i), 1) = 1 ./ 1) then
+                if not (getv(getv(mcoeffs, i), 1) = (1 ./ 1)) then
                     matrix_normalize_sparse_row(getv(mcoeffs, i))
             >>
+        >>;
+        
+        if f4_debug() then <<
+            prin2t {"exact_sparse_rref: lower part reduced:", matrixj};
+            prin2t {"exact_sparse_rref: pivs:", pivs}
         >>;
 
         % number of new pivots
@@ -383,7 +388,7 @@ asserted procedure matrix_exact_sparse_rref(ring: PolyRing, matrixj: MacaulayMat
                 
                 startcol := getv(getv(pivs, k), 1);
 
-                matrix_load_indexed_coefficients(densecoeffs, pivs[k], cfsref);
+                matrix_load_indexed_coefficients(densecoeffs, getv(pivs, k), cfsref);
                 
                 newpivs := newpivs + 1;
 
@@ -480,12 +485,17 @@ asserted procedure matrix_convert_hashes_to_columns(matrixj: MacaulayMatrix,
         loadj := hashtable_htget_load(symbol_ht);
 
         % monoms from symbolic table represent one column in the matrixj
+        
+        if f4_debug() then <<
+            prin2t {"convert_hashes_to_columns: matrix", matrixj};
+            prin2t {"convert_hashes_to_columns: symbol_ht", symbol_ht}
+        >>;
 
         col2hash := dv_undef(loadj - 1);
         j := 1;
         % number of pivotal cols
         k := 0;
-        for i := hashtable_htget_offset(symbol_ht):loadj do <<
+        for i := hashtable_htget_offset(symbol_ht) : loadj do <<
             % column to hash index
             putv(col2hash, j, i);
             j := j + 1;
@@ -497,6 +507,10 @@ asserted procedure matrix_convert_hashes_to_columns(matrixj: MacaulayMatrix,
 
         % sort columns
         sorting_sort_columns_by_hash(col2hash, symbol_ht);
+        
+        if f4_debug() then <<
+            prin2t {"convert_hashes_to_columns: sorted by hash", col2hash}
+        >>;
 
         matrix_mset_nleft(matrixj, k);
         % -1 as long as hashtable loadj is always 1 more than actual
@@ -505,7 +519,7 @@ asserted procedure matrix_convert_hashes_to_columns(matrixj: MacaulayMatrix,
         % store the other direction of mapping,
         % hash -> column
         for k := 1:dv_length(col2hash) do
-            hashtable_hvset_idx(symbol_ht, getv(hdata, getv(col2hash, k)), k);
+            hashtable_hvset_idx(getv(hdata, getv(col2hash, k)), k);
         
         nterms := 0;
         uprows := matrix_mget_uprows(matrixj);
