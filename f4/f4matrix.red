@@ -316,7 +316,9 @@ asserted procedure matrix_exact_sparse_rref(ring: PolyRing, matrixj: MacaulayMat
         % we will modify them inplace when reducing by pivs
         upivs := matrix_mget_lowrows(matrixj);
 
-        densecoeffs := dv_zeros(ncols);
+        densecoeffs := dv_undef(ncols);
+        for i := 1:dv_length(densecoeffs) do
+            putv(densecoeffs, i, nil ./ 1);
 
         bcoeffs := basis_bget_coeffs(basis);
 
@@ -448,7 +450,9 @@ asserted procedure matrix_interreduce_matrix_rows(ring: PolyRing, matrixj: Macau
             putv(coeffs, i, dv_copy(getv(basis_bget_coeffs(basis), getv(up2coef, i))))
         >>;
 
-        densecfs := dv_zeros(matrix_mget_ncols(matrixj));
+        densecfs := dv_undef(matrix_mget_ncols(matrixj));
+        for i := 1:dv_length(densecfs) do
+            putv(densecfs, i, nil ./ 1);
 
         k := matrix_mget_nrows(matrixj);
 

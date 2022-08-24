@@ -116,7 +116,7 @@ procedure wuwu(n);
 
 
 asserted procedure f4_debug();
-    t;
+    nil;
 
 % Julia: Reduce-specific things;
 %   As we want to mirror the behavior of Julia with integer division masks as close as possible,
