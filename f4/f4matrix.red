@@ -437,9 +437,9 @@ asserted procedure matrix_interreduce_matrix_rows(ring: PolyRing, matrixj: Macau
         up2coef := matrix_mget_up2coef(matrixj);
         coeffs := matrix_mget_coeffs(matrixj);
 
-        prin2t {"In interreduce"};
-        prin2t {"Matrix", matrixj};
-        prin2t {"Basis", basis};
+        % prin2t {"In interreduce"};
+        % prin2t {"Matrix", matrixj};
+        % prin2t {"Basis", basis};
 
         % same pivs as for rref
         % pivs: column idx --> vector of present columns
@@ -456,7 +456,7 @@ asserted procedure matrix_interreduce_matrix_rows(ring: PolyRing, matrixj: Macau
 
         k := matrix_mget_nrows(matrixj);
 
-        prin2t "uwu";
+        % prin2t "uwu";
 
         for i := 1:matrix_mget_ncols(matrixj) do <<
             l := matrix_mget_ncols(matrixj) - i + 1;
@@ -469,10 +469,10 @@ asserted procedure matrix_interreduce_matrix_rows(ring: PolyRing, matrixj: Macau
                 for j := 1:dv_length(reducexps) do
                     putv(densecfs, getv(reducexps, j), getv(cfs, j));
 
-                prin2t {"Reducting, i =", i};
-                prin2t {"densecfs = ", densecfs};
-                prin2t {"pivs = ", pivs};
-                prin2t {"l = ", l};
+                % prin2t {"Reducting, i =", i};
+                % prin2t {"densecfs = ", densecfs};
+                % prin2t {"pivs = ", pivs};
+                % prin2t {"l = ", l};
                 {zeroes, newrow, newcfs} := matrix_reduce_dense_row_by_known_pivots_sparse(densecfs, matrixj, basis, pivs, l, l, nil);
 
                 putv(lowrows, k, newrow);

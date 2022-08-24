@@ -6,9 +6,9 @@ module f4groebner;
 % Select the optimal size of hashtable
 asserted procedure groebner_select_tablesize(ring: PolyRing, exps: Vector): Integer;
     begin scalar nvars;
-        % Julia: for now, we want only 8 elements for debugging purposes
+        % Julia: for now, we want only 2^14 elements for debugging purposes
         nvars := io_prget_nvars(ring);
-        return 8
+        return 2^14
     end;
 
 %--------------------------------------------------------------------------------------------------
@@ -17,7 +17,7 @@ asserted procedure groebner_select_tablesize(ring: PolyRing, exps: Vector): Inte
 %   . ring - a polynomial ring 
 %   . exps - a list of polynomials' terms (not hashed)
 %   . coeffs - a list of polynomials' coefficients
-asserted procedure groebner_groebner(ring: PolyRing, exps: Vector, coeffs: Vector): DottedPair;
+asserted procedure groebner_groebner(ring: PolyRing, exps: Vector, coeffs: Vector, reduced): DottedPair;
     begin scalar tablesize, basis, ht, gbexps;
         
         % select hashtable size
@@ -28,7 +28,7 @@ asserted procedure groebner_groebner(ring: PolyRing, exps: Vector, coeffs: Vecto
 
         basis . ht := f4_initialize_structures(ring, exps, coeffs, tablesize);
         
-        f4_f4(ring, basis, ht, nil);
+        f4_f4(ring, basis, ht, t);
         
         gbexps := basis_hash_to_exponents(basis, ht);
 

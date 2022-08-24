@@ -299,7 +299,7 @@ asserted procedure hashtable_initialize_secondary_hash_table(ht: MonomialHashtab
     begin scalar initial_size, exponents, hashdata, hashtable,
                     explen, nvars, ord, divmap, divvars, ndivvars, ndivbits,
                     hasher, loadj, size, offset;
-        initial_size := 8; % Julia: best size in Julia is 2^6
+        initial_size := 2^6; % Julia: best size in Julia is 2^6
         
         exponents := dv_undef(initial_size);
         hashdata := dv_undef(initial_size);

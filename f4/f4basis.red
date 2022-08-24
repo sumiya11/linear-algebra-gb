@@ -57,7 +57,7 @@ asserted procedure basis_Pairset(pairs: Vector, ld: Integer): Pairset;
 % Initialize and return a pairset with capacity for `initial_size` pairs
 asserted procedure basis_initialize_pairset();
     begin scalar initial_size, pairs;
-        initial_size := 8; % Julia: 8 vs. 2^6 in Julia
+        initial_size := 2^6; % Julia: 8 vs. 2^6 in Julia
         pairs := dv_undef(initial_size);
         return basis_Pairset(pairs, 0)
     end;
