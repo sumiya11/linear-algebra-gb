@@ -47,7 +47,7 @@ asserted procedure io_prset_ord(pr: PolyRing, x);
 %--------------------------------------------------------------------------------------------------
 
 % list of lp --> {ring, vector of vectors of monons, vector of vectors of coeffs}
-asserted procedure io_convert_to_internal(polys: List, vars: List, ord: Any): Vector;
+asserted procedure io_convert_to_internal(polys: List, vars: List, ord: Any): List;
     begin scalar n, gens, coeffs, ring, i, gensi, coeffsi, 
                     gensij, explen, gensij_list;
         
@@ -91,6 +91,9 @@ asserted procedure io_convert_to_internal(polys: List, vars: List, ord: Any): Ve
                     putv(gensij, k, pop(gensij_list));
                 putv(gensi, j, gensij)
             >>;
+
+            sorting_sort_input_to_change_ordering(gensi, coeffsi, 'revgradlex);
+
             i := i + 1
         >>;
         
@@ -119,7 +122,7 @@ asserted procedure io_convert_to_output(ring: PolyRing, bexps: Vector, bcoeffs: 
 
             push(poly_poly2lp(poly_Polynomial(bexpsi, bcoeffsi)), anssq)
         >>;
-        return anssq
+        return reversip(anssq)
     end;
 
 endmodule; % end of io module

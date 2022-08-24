@@ -3,6 +3,15 @@ module f4poly;
 fluid '(global!-dipvars!*);
 fluid '(vdpsortmode!*);
 
+procedure f5_isPolynomial(x); eqcar(x, 'p);
+procedure f5_isCoeff(x); sqp(x) or integerp(x);
+struct Polynomial checked by f5_isPolynomial;
+struct Terms checked by listp;
+struct Term checked by listp;
+struct Coeffs checked by listp;
+% Coeff can be either an Integer or a Standard Quotient.
+struct Coeff checked by f5_isCoeff;
+
 asserted procedure poly_initRing(vars, ord);
     <<
         global!-dipvars!* := vars;
@@ -438,7 +447,7 @@ asserted inline procedure poly_sf2poly(u: SF): Polynomial;
 
 % Conversion to Polynomial: scan the standard form. ev and bc are the
 % exponent and coefficient parts collected so far from higher parts.
-asserted procedure poly_sf2poly1(u: SQ, ev: List, bc: Coeff): Polynomial;
+asserted procedure poly_sf2poly1(u: SF, ev: List, bc: Coeff): Polynomial;
   if null u then
      poly_zero()
   else if domainp u then
@@ -510,12 +519,12 @@ asserted procedure poly_poly2sq(p: Polynomial): SQ;
 % Poly --> Lisp Prefix 
 
 % Returns prefix equivalent to the sum of elements of u
-asserted procedure poly_replus(u: List): List;
+asserted procedure poly_replus(u: List): Any;
    if atom u then u else if null cdr u then car u else 'plus . u;
 
 % Returns prefix equivalent to the product of elements of u.
 % u is a list of prefix expressions the first of which is a number.
-procedure poly_retimes(u: List): List;
+procedure poly_retimes(u: List): Any;
    if car u = 1 then
       if cdr u then poly_retimes cdr u else 1
    else if null cdr u then
@@ -524,7 +533,7 @@ procedure poly_retimes(u: List): List;
       'times . u;
 
 % Returns prefix equivalent to the Polynomial u.
-asserted procedure poly_poly2lp1(u: Polynomial): List;
+asserted procedure poly_poly2lp1(u: Polynomial): Any;
    begin scalar x,y;
       if poly_iszero!?(u) then
          return nil;
@@ -537,7 +546,7 @@ asserted procedure poly_poly2lp1(u: Polynomial): List;
    end;
 
 % Converts a Polynomial to an equivalent Lisp Prefix
-asserted procedure poly_poly2lp(f: Polynomial): List;
+asserted procedure poly_poly2lp(f: Polynomial): Any;
    if poly_iszero!?(f) then 0 else poly_replus poly_poly2lp1(f);
 
 endmodule; % end of poly

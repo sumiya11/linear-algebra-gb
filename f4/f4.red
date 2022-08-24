@@ -40,6 +40,8 @@ module f4;
 %   has name "hashtable_insert_in_hash_table" in Reduce and is 
 %   defined in the file "f4hashtable.red".
 
+%--------------------------------------------------------------------------------------------------
+
 % . f4 - this file, contains package AM entry point with a single function `f4`;
 % . groebner - high-level Groebner basis computation; calls to f4 as its backend;
 % . f4 - low-level f4 implementation, the heart of the package;
@@ -48,10 +50,70 @@ module f4;
 % . matrix - MacaulayMatrix struct implementation; contains linear-algebra-style reduction;
 % . internaltypes - type declarations (have no practical effect in Reduce, 
 %                   but are left for consistency with Julia implementation)
-% . io - input-output conversions of polynomial representations 
-create!-package('(f4 f4groebner f4f4 f4hashtable f4basis f4matrix f4sorting f4internaltypes f4io f4poly f4dv), nil);
+% . io - input-output conversions of polynomial representations
+create!-package('(f4 f4groebner f4f4 f4hashtable f4basis f4matrix f4sorting f4io f4poly f4dv), nil);
 
-%--------------------------------------------------------------------------------------------------
+compiletime load!-package 'vector88;
+
+% Assertions should be OFF in production.
+load!-package 'assert;
+off1 'assert;
+off1 'assert_procedures;
+off1 'assert_inline_procedures;
+off1 'assertinstall;
+off1 'evalassert;
+
+% from f5io.red
+struct PolyRing;
+
+% from basis.red
+struct SPair;
+struct Basis;
+struct Pairset;
+
+% from hashtable.red
+struct Hashvalue;
+struct MonomialHashtable;
+
+
+% from matrix.red
+struct MacaulayMatrix;
+
+% All supported coefficient types in F4
+struct Coeff; % checked by listp;
+
+% Polynomial monomial exponent vector type
+struct ExponentVector; % = Vector{UInt16}
+% The type of entry of an exponent vector
+struct Degree; % = eltype(ExponentVector)
+
+struct ExponentIdx; % = Int32
+
+
+struct DivisionMask; % = UInt32
+
+% Hash of exponent vector
+struct ExponentHash; %  = UInt32
+
+% MonomsVector of a zero polynomial is an empty `MonomsVector` object.
+% CoeffsVector of a zero polynomial is an empty `CoeffsVector` object.
+
+% Vector of polynomial monomials
+struct MonomsVector; % = Vector{ExponentIdx}
+% Vector of polynomial coefficients
+struct CoeffsVector; % = Vector{Coeff}
+
+% Column index of a matrix
+struct ColumnIdx; % = Int32
+
+procedure wuwu(n);
+    begin scalar v;
+        v := mkvect(n);
+        for i := 1:n do
+            v[i] := i*i;
+        return v
+    end;
+
 
 asserted procedure f4_debug();
     t;
@@ -60,7 +122,7 @@ asserted procedure f4_debug();
 %   As we want to mirror the behavior of Julia with integer division masks as close as possible,
 %   we use generic Integers (not machine integers) and operate on the lowest `f4_sizeofInt32` bits.
 fluid '(f4_sizeofInt32!*);
-f4_sizeofInt32!* := 32;   
+f4_sizeofInt32!* := 32;
 
 % Julia: analogue of x[end] -- access the last element of vector x
 asserted procedure f4_getvlast(x);
@@ -86,6 +148,7 @@ asserted procedure f4_groebner(u: List): List;
                     bexps, bcoeffs, vars, ord;
         if null u or not (listp u) then
             f4_argumentError();
+        
         
         % Extract the list of polynomials
         polynomials := reval pop u;

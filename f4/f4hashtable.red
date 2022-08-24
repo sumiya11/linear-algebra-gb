@@ -18,6 +18,7 @@ asserted procedure hashtable_Hashvalue(
         deg: Degree): Hashvalue;
     begin scalar v;
         v := dv_undef(4);
+        % v[1] := hash;
         putv(v, 1, hash);
         putv(v, 2, divmask);
         putv(v, 3, idx);
@@ -61,7 +62,7 @@ asserted procedure hashtable_copy_hashvalue(hv: Hashvalue): Hashvalue;
 
 %   struct MonomialHashtable
 %   
-% Hashtable implementing linear probing
+% MonomialHashtable implementing linear probing
 % and designed to store and operate with monomials.
 % 
 % Stores the following:
@@ -107,89 +108,89 @@ asserted procedure hashtable_MonomialHashtable(
     end;
 
 % Getters
-asserted procedure hashtable_htget_exponents(ht: Hashtable): Vector;
+asserted procedure hashtable_htget_exponents(ht: MonomialHashtable): Vector;
     getv(ht, 1);
 
-asserted procedure hashtable_htget_hashtable(ht: Hashtable): Vector;
+asserted procedure hashtable_htget_hashtable(ht: MonomialHashtable): Vector;
     getv(ht, 2);
 
-asserted procedure hashtable_htget_hashdata(ht: Hashtable): Vector;
+asserted procedure hashtable_htget_hashdata(ht: MonomialHashtable): Vector;
     getv(ht, 3);
 
-asserted procedure hashtable_htget_hasher(ht: Hashtable): Vector;
+asserted procedure hashtable_htget_hasher(ht: MonomialHashtable): Vector;
     getv(ht, 4);
 
-asserted procedure hashtable_htget_nvars(ht: Hashtable): Integer;
+asserted procedure hashtable_htget_nvars(ht: MonomialHashtable): Integer;
     getv(ht, 5);
 
-asserted procedure hashtable_htget_explen(ht: Hashtable): Integer;
+asserted procedure hashtable_htget_explen(ht: MonomialHashtable): Integer;
     getv(ht, 6);
 
-asserted procedure hashtable_htget_ord(ht: Hashtable): Any;
+asserted procedure hashtable_htget_ord(ht: MonomialHashtable): Any;
     getv(ht, 7);
 
-asserted procedure hashtable_htget_divmap(ht: Hashtable): Vector;
+asserted procedure hashtable_htget_divmap(ht: MonomialHashtable): Vector;
     getv(ht, 8);
 
-asserted procedure hashtable_htget_divvars(ht: Hashtable): Vector;
+asserted procedure hashtable_htget_divvars(ht: MonomialHashtable): Vector;
     getv(ht, 9);
 
-asserted procedure hashtable_htget_ndivvars(ht: Hashtable): Integer;
+asserted procedure hashtable_htget_ndivvars(ht: MonomialHashtable): Integer;
     getv(ht, 10);
 
-asserted procedure hashtable_htget_ndivbits(ht: Hashtable): Integer;
+asserted procedure hashtable_htget_ndivbits(ht: MonomialHashtable): Integer;
     getv(ht, 11);
 
-asserted procedure hashtable_htget_size(ht: Hashtable): Integer;
+asserted procedure hashtable_htget_size(ht: MonomialHashtable): Integer;
     getv(ht, 12);
 
-asserted procedure hashtable_htget_load(ht: Hashtable): Integer;
+asserted procedure hashtable_htget_load(ht: MonomialHashtable): Integer;
     getv(ht, 13);
 
-asserted procedure hashtable_htget_offset(ht: Hashtable): Integer;
+asserted procedure hashtable_htget_offset(ht: MonomialHashtable): Integer;
     getv(ht, 14);
 
 % Setters
-asserted procedure hashtable_htset_exponents(ht: Hashtable, x: Vector): Vector;
+asserted procedure hashtable_htset_exponents(ht: MonomialHashtable, x: Vector): Vector;
     putv(ht, 1, x);
 
-asserted procedure hashtable_htset_hashtable(ht: Hashtable, x: Vector): Vector;
+asserted procedure hashtable_htset_hashtable(ht: MonomialHashtable, x: Vector): Vector;
     putv(ht, 2, x);
 
-asserted procedure hashtable_htset_hashdata(ht: Hashtable, x: Vector): Vector;
+asserted procedure hashtable_htset_hashdata(ht: MonomialHashtable, x: Vector): Vector;
     putv(ht, 3, x);
 
-asserted procedure hashtable_htset_hasher(ht: Hashtable, x: Vector): Vector;
+asserted procedure hashtable_htset_hasher(ht: MonomialHashtable, x: Vector): Vector;
     putv(ht, 4, x);
 
-asserted procedure hashtable_htset_nvars(ht: Hashtable, x: Integer): Integer;
+asserted procedure hashtable_htset_nvars(ht: MonomialHashtable, x: Integer): Integer;
     putv(ht, 5, x);
 
-asserted procedure hashtable_htset_explen(ht: Hashtable, x: Integer): Integer;
+asserted procedure hashtable_htset_explen(ht: MonomialHashtable, x: Integer): Integer;
     putv(ht, 6, x);
 
-asserted procedure hashtable_htset_ord(ht: Hashtable, x: Any): Any;
+asserted procedure hashtable_htset_ord(ht: MonomialHashtable, x: Any): Any;
     putv(ht, 7, x);
 
-asserted procedure hashtable_htset_divmap(ht: Hashtable, x: Vector): Vector;
+asserted procedure hashtable_htset_divmap(ht: MonomialHashtable, x: Vector): Vector;
     putv(ht, 8, x);
 
-asserted procedure hashtable_htset_divvars(ht: Hashtable, x: Vector): Vector;
+asserted procedure hashtable_htset_divvars(ht: MonomialHashtable, x: Vector): Vector;
     putv(ht, 9, x);
 
-asserted procedure hashtable_htset_ndivvars(ht: Hashtable, x: Integer): Integer;
+asserted procedure hashtable_htset_ndivvars(ht: MonomialHashtable, x: Integer): Integer;
     putv(ht, 10, x);
 
-asserted procedure hashtable_htset_ndivbits(ht: Hashtable, x: Integer): Integer;
+asserted procedure hashtable_htset_ndivbits(ht: MonomialHashtable, x: Integer): Integer;
     putv(ht, 11, x);
 
-asserted procedure hashtable_htset_size(ht: Hashtable, x: Integer): Integer;
+asserted procedure hashtable_htset_size(ht: MonomialHashtable, x: Integer): Integer;
     putv(ht, 12, x);
 
-asserted procedure hashtable_htset_load(ht: Hashtable, x: Integer): Integer;
+asserted procedure hashtable_htset_load(ht: MonomialHashtable, x: Integer): Integer;
     putv(ht, 13, x);
 
-asserted procedure hashtable_htset_offset(ht: Hashtable, x: Integer): Integer;
+asserted procedure hashtable_htset_offset(ht: MonomialHashtable, x: Integer): Integer;
     putv(ht, 14, x);
 
 %--------------------------------------------------------------------------------------------------
@@ -221,8 +222,8 @@ asserted procedure hashtable_initialize_basis_hash_table(ring: PolyRing, initial
         % fill hasher
         for i := 1:explen do
             % we don't want hash vector components to be zero
-            while getv(hasher, i) = 0 do
-                putv(hasher, i, random(f4_sizeofInt32!*));
+            while hasher[i] = 0 do
+                hasher[i] := random(2^f4_sizeofInt32!*);
         
         % exponents array starts from index offset,
         % We store buffer array at index 1
@@ -248,10 +249,10 @@ asserted procedure hashtable_initialize_basis_hash_table(ring: PolyRing, initial
         divmap := dv_zeros(ndivvars * ndivbits);
         % count only first ndivvars variables for divisibility checks
         for i := 1:ndivvars do
-            putv(divvars, i, i);
+            divvars[i] := i;
 
         % first stored exponent used as buffer lately
-        putv(exponents, 1, dv_zeros(explen));
+        exponents[1] := dv_zeros(explen);
 
         return hashtable_MonomialHashtable(
                 exponents, hashtable, hashdata, hasher,
@@ -477,7 +478,7 @@ asserted procedure hashtable_fill_divmask(ht: MonomialHashtable);
                     htexps, htdata, e, ctr, steps, unmasked, divmask;
         ndivvars := hashtable_htget_ndivvars(ht);
         divvars := hashtable_htget_divvars(ht);
-        ndivbits := hashtable_htget_ndivvars(ht);
+        ndivbits := hashtable_htget_ndivbits(ht);
         divmap := hashtable_htget_divmap(ht);
 
         min_exp := dv_undef(ndivvars);
@@ -500,6 +501,11 @@ asserted procedure hashtable_fill_divmask(ht: MonomialHashtable);
                 if getv(e, getv(divvars, j)) < getv(min_exp, j) then
                     putv(min_exp, j, getv(e, getv(divvars, j)))
             >>
+        >>;
+
+        if f4_debug() then <<
+            prin2t {"In fill_divmask"};
+            prin2t {ndivbits, min_exp, max_exp}        
         >>;
 
         ctr := 1;
@@ -546,12 +552,12 @@ asserted procedure hashtable_generate_monomial_divmask(e: ExponentVector, ht: Mo
 %--------------------------------------------------------------------------------------------------
 
 % h1 divisible by h2
-asserted procedure hashtable_is_monom_divisible(h1: ExponentIdx, h2: ExponentIdx, ht: MonomialHashtable): Bool;
+asserted procedure hashtable_is_monom_divisible(h1: ExponentIdx, h2: ExponentIdx, ht: MonomialHashtable): Boolean;
     begin scalar htdata, e1, e2, result, htexps;
         htdata := hashtable_htget_hashdata(ht);
 
-        % if not (land(hashtable_hvget_divmask(getv(htdata, h2)), lnot(hashtable_hvget_divmask(getv(htdata, h2)))) = 0) then
-        %     return nil;
+        if not (land(hashtable_hvget_divmask(getv(htdata, h2)), lnot(hashtable_hvget_divmask(getv(htdata, h1)))) = 0) then
+            return nil;
 
         htexps := hashtable_htget_exponents(ht);
         e1 := getv(htexps, h1);
@@ -569,7 +575,7 @@ asserted procedure hashtable_is_monom_divisible(h1: ExponentIdx, h2: ExponentIdx
         return result
     end;
 
-asserted procedure hashtable_is_gcd_const(h1: ExponentIdx, h2: ExponentIdx, ht: MonomialHashtable): Bool;
+asserted procedure hashtable_is_gcd_const(h1: ExponentIdx, h2: ExponentIdx, ht: MonomialHashtable): Boolean;
     begin scalar htexps, e1, e2, result;
         htexps := hashtable_htget_exponents(ht);
         e1 := getv(htexps, h1);
@@ -750,7 +756,7 @@ asserted procedure hashtable_insert_multiplied_poly_in_hash_table(
 %
 % If symbolic hash table of the given size and load factor should be
 % enlarged after adding the polynomial of length `added` 
-asserted procedure hashtable_symbolic_ht_needscale(loadj: Integer, added: Integer, size: Integer): Bool;
+asserted procedure hashtable_symbolic_ht_needscale(loadj: Integer, added: Integer, size: Integer): Boolean;
     1.4*(loadj + added) >= size;
 
 asserted procedure hashtable_multiplied_poly_to_matrix_row(
@@ -815,7 +821,7 @@ asserted procedure hashtable_insert_in_basis_hash_table_pivots(
                 else <<
                     ehm := getv(bexps, hm);
                     for j := 1:explen do
-                        if not (getv(e, j) = getv(ehm, i)) then <<
+                        if not (getv(e, j) = getv(ehm, j)) then <<
                             i := i + 1;
                             go to Restart
                         >>;

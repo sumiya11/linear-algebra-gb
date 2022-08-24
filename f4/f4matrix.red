@@ -83,10 +83,10 @@ asserted procedure matrix_mget_nleft(m: MacaulayMatrix): Integer;
 asserted procedure matrix_mget_nright(m: MacaulayMatrix): Integer;
     getv(m, 12);
 
-asserted procedure matrix_mget_up2coef(m: MacaulayMatrix): Integer;
+asserted procedure matrix_mget_up2coef(m: MacaulayMatrix): Vector;
     getv(m, 13);
     
-asserted procedure matrix_mget_low2coef(m: MacaulayMatrix): Integer;
+asserted procedure matrix_mget_low2coef(m: MacaulayMatrix): Vector;
     getv(m, 14);
 
 asserted procedure matrix_mset_uprows(m: MacaulayMatrix, x);
@@ -211,8 +211,8 @@ asserted procedure matrix_load_indexed_coefficients(densecoeffs: Vector, rowexps
 %--------------------------------------------------------------------------------------------------
 
 asserted procedure matrix_reduce_dense_row_by_known_pivots_sparse(densecoeffs: Vector, 
-                        matrixj: matrixj, basis: Basis, pivs: Vector, startcol: ColumnIdx,
-                        tmp_pos: ColumnIdx, exact_colmap: Bool);
+                        matrixj: MacaulayMatrix, basis: Basis, pivs: Vector, startcol: ColumnIdx,
+                        tmp_pos: ColumnIdx, exact_colmap: Boolean);
     begin scalar ncols, nleft, mcoeffs, up2coef, low2coef, bcoeffs, k, uzero,
                     np, cfs, j, np, newrow, newcfs, reducerexps;
         
@@ -435,18 +435,24 @@ asserted procedure matrix_interreduce_matrix_rows(ring: PolyRing, matrixj: Macau
         up2coef := matrix_mget_up2coef(matrixj);
         coeffs := matrix_mget_coeffs(matrixj);
 
+        prin2t {"In interreduce"};
+        prin2t {"Matrix", matrixj};
+        prin2t {"Basis", basis};
+
         % same pivs as for rref
         % pivs: column idx --> vector of present columns
         pivs := dv_undef(matrix_mget_ncols(matrixj));
         for i := 1:matrix_mget_nrows(matrixj) do <<
             putv(pivs, getv(getv(uprows, i), 1), getv(uprows, i));
             putv(low2coef, getv(getv(uprows, i), 1), i);
-            putv(coeffs, i, copy(getv(coeffs, getv(up2coef, i))))
+            putv(coeffs, i, dv_copy(getv(basis_bget_coeffs(basis), getv(up2coef, i))))
         >>;
 
         densecfs := dv_zeros(matrix_mget_ncols(matrixj));
 
         k := matrix_mget_nrows(matrixj);
+
+        prin2t "uwu";
 
         for i := 1:matrix_mget_ncols(matrixj) do <<
             l := matrix_mget_ncols(matrixj) - i + 1;
@@ -459,6 +465,10 @@ asserted procedure matrix_interreduce_matrix_rows(ring: PolyRing, matrixj: Macau
                 for j := 1:dv_length(reducexps) do
                     putv(densecfs, getv(reducexps, j), getv(cfs, j));
 
+                prin2t {"Reducting, i =", i};
+                prin2t {"densecfs = ", densecfs};
+                prin2t {"pivs = ", pivs};
+                prin2t {"l = ", l};
                 {zeroes, newrow, newcfs} := matrix_reduce_dense_row_by_known_pivots_sparse(densecfs, matrixj, basis, pivs, l, l, nil);
 
                 putv(lowrows, k, newrow);
@@ -466,8 +476,8 @@ asserted procedure matrix_interreduce_matrix_rows(ring: PolyRing, matrixj: Macau
                 putv(pivs, l, getv(lowrows, k));
                 k := k - 1;
 
-                for each idx in newrow do
-                    putv(densecfs, idx, nil ./ 1)
+                for idx := 1:dv_length(newrow) do
+                    putv(densecfs, getv(newrow, idx), nil ./ 1)
             >>
         >>;
 

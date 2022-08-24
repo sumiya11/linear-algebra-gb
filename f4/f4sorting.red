@@ -4,7 +4,7 @@ module f4sorting;
 %--------------------------------------------------------------------------------------------------
 
 % degrevlex exponent vector comparison
-asserted procedure sorting_exponent_isless_drl(ea: ExponentVector, eb: ExponentVector): Bool;
+asserted procedure sorting_exponent_isless_drl(ea: ExponentVector, eb: ExponentVector): Boolean;
     begin integer i;
         if f4_getvlast(ea) < f4_getvlast(eb) then
             return t
@@ -22,7 +22,7 @@ asserted procedure sorting_exponent_isless_drl(ea: ExponentVector, eb: ExponentV
     end;
 
 % lex exponent vector comparison
-asserted procedure sorting_exponent_isless_lex(ea: ExponentVector, eb: ExponentVector): Bool;
+asserted procedure sorting_exponent_isless_lex(ea: ExponentVector, eb: ExponentVector): Boolean;
     begin integer i;
         i := 1;
         while (i < dv_length(ea) - 1) and getv(ea, i) = getv(eb, i) do
@@ -68,9 +68,29 @@ asserted procedure sorting_sort_gens_by_lead_increasing(basis: Basis, ht: Monomi
             prin2t {"sort_gens_by_lead_increasing: after", inds};
 
         for i := 1:basis_bget_ntotal(basis) do <<
-            x . inds := inds;
+            x := pop(inds);
             putv(gens, i, cadr x);
             putv(coeffs, i, caddr x)
+        >>
+    end;
+
+%--------------------------------------------------------------------------------------------------
+
+asserted procedure sorting_comparator_sort_input_to_change_ordering(x, y);
+    not sorting_exponent_isless_drl(car x, car y);
+
+asserted procedure sorting_sort_input_to_change_ordering(exps, coeffs, ord);
+    begin scalar inds, coeffs, x;
+
+        inds := for i := 1:dv_length(exps) collect 
+            {getv(exps, i), getv(coeffs, i)};
+
+        inds := sort(inds, 'sorting_comparator_sort_input_to_change_ordering);
+
+        for i := 1:dv_length(exps) do <<
+            x := pop(inds);
+            putv(exps, i, car x);
+            putv(coeffs, i, cadr x)
         >>
     end;
 
@@ -80,7 +100,7 @@ asserted procedure sorting_comparator_sort_gens_by_lead_increasing_in_standardiz
     sorting_exponent_isless_drl(car x, car y);
 
 asserted procedure sorting_sort_gens_by_lead_increasing_in_standardize(basis: Basis, ht: MonomialHashtable, ord);
-    begin scalar gens, exps, nnr, lead, genscopy, coeffs, coeffscopy, leadcopy, inds2;
+    begin scalar gens, exps, nnr, lead, genscopy, coeffs, coeffscopy, leadcopy, inds, x;
         gens := basis_bget_gens(basis);
         exps := hashtable_htget_exponents(ht);
         lead := basis_bget_lead(basis);
@@ -93,7 +113,7 @@ asserted procedure sorting_sort_gens_by_lead_increasing_in_standardize(basis: Ba
         inds := sort(inds, 'sorting_comparator_sort_gens_by_lead_increasing_in_standardize);
         
         for i := 1:basis_bget_nlead(basis) do <<
-            x . inds := inds;
+            x := pop(inds);
             putv(gens, i, cadr x);
             putv(coeffs, i, caddr x);
             putv(lead, i, cadddr x)
@@ -117,6 +137,10 @@ asserted procedure sorting_sort_pairset_by_degree(ps: Pairset, from: Integer, sz
         part := for i := from:from+sz collect getv(pairs, i);
 
         part := sort(part, 'sorting_comparator_sort_pairset_by_degree);
+
+        part := sort(part, function(lambda(x, y); basis_spget_deg(x) < basis_spget_deg(y)));
+        part := sort(part, quote(lambda(x, y); basis_spget_deg(x) < basis_spget_deg(y)));
+        part := sort(part, '(lambda (x y) (lessp (basis_spget_deg x) (basis_spget_deg y) ) ) );
 
         for i := from:from+sz do
             putv(pairs, i, pop(part))
@@ -192,7 +216,7 @@ asserted procedure sorting_sort_matrix_rows_decreasing(matrixj: MacaulayMatrix);
         inds := sort(inds, 'sorting_comparator_sort_matrix_rows_decreasing);
         
         for i := 1:matrix_mget_nup(matrixj) do <<
-            x . inds := inds;
+            x := pop(inds);
             putv(uprows, i, cadr x);
             putv(up2coef, i, caddr x)
         >>
@@ -253,7 +277,7 @@ asserted procedure sorting_sort_pairset_by_lcm(pairset: Pairset, npairs: Integer
 
 % sorts generators selected in normal strategy function
 % by their ordering in the current basis (identity sort)
-asserted procedure sorting_sort_generators_by_position(gens: Vector, loadj: Int);
+asserted procedure sorting_sort_generators_by_position(gens: Vector, loadj: Integer);
     begin scalar part;
         part := for i := 1:loadj collect getv(gens, i);
 
@@ -283,7 +307,7 @@ asserted procedure sorting_comparator_sorting_sort_columns_by_hash_drl(a, b);
     end;
 
 asserted procedure sorting_sort_columns_by_hash(col2hash: Vector, symbol_ht: MonomialHashtable);
-    begin scalar hd, es, len, col2hash_list;
+    begin scalar hd, es, len, col2hash_list, listtosort;
         hd := hashtable_htget_hashdata(symbol_ht);
         es := hashtable_htget_exponents(symbol_ht);
         len := hashtable_htget_explen(symbol_ht);

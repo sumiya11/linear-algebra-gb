@@ -10,7 +10,13 @@ struct DynamicVector;
 
 % Vector of size n
 asserted procedure dv_undef(n: Integer): DynamicVector;
-    mkvect(n);
+    <<
+        if n = 4711 then <<
+            backtrace();
+            rederr "wuwu"
+        >>;
+        mkvect(n)
+    >>;
 
 % Length of vector x
 asserted procedure dv_length(v: DynamicVector): Integer;
@@ -21,6 +27,7 @@ asserted procedure dv_zeros(n): DynamicVector;
     begin scalar v;
         v := dv_undef(n);
         for i := 1:n do
+            % v[i] := 0;
             putv(v, i, 0);
         return v
     end;
@@ -28,6 +35,16 @@ asserted procedure dv_zeros(n): DynamicVector;
 % Vector of size equal to size of `x`
 asserted procedure dv_similar(x): DynamicVector;
     dv_undef(dv_length(x));
+
+% Deepcopy of x.
+% Elements are *not* copied recursively.
+asserted procedure dv_copy(x): DynamicVector;
+    begin scalar v;
+        v := dv_similar(x);
+        for i := 1:dv_length(x) do
+            putv(v, i, getv(x, i));
+        return v
+    end;
 
 % Resize vector x to be of length n;
 % 

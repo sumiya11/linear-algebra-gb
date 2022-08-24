@@ -35,7 +35,7 @@ asserted procedure f4_reduction(ring: PolyRing, basis: Basis, matrixj: MacaulayM
 % Initializes Basis and MonomialHashtable structures,
 % fills input data from exponents and coeffs
 %
-% Hashtable initial size is set to tablesize
+% MonomialHashtable initial size is set to tablesize
 asserted procedure f4_initialize_structures(ring: PolyRing, exponents: Vector, 
                                             coeffs: Vector, tablesize: Integer);
     begin scalar basis, basis_ht;
@@ -55,8 +55,8 @@ asserted procedure f4_initialize_structures(ring: PolyRing, exponents: Vector,
         
         if f4_debug() then <<
             prin2t {"initialize_structures: filled"};
-            prin2t basis;
-            prin2t basis_ht
+            prin2t {"Basis: ", basis};
+            prin2t {"HT: ", basis_ht}
         >>;
 
         hashtable_fill_divmask(basis_ht);
@@ -91,9 +91,10 @@ asserted procedure f4_reducegb(ring: PolyRing, basis: Basis, matrixj: MacaulayMa
                     k, lead, htdata, ntotal, i;
         
         exponents := hashtable_htget_exponents(ht);
-        etmp := getv(exponents, 1);
+        etmp := exponents[1];
+        
         for i := 1:dv_length(etmp) do
-            putv(etmp, i, 0);
+            etmp[i] := 0;
         %  etmp is now set to zero, and has zero hash
 
         matrix_reinitialize_matrix(matrixj, basis_bget_nlead(basis));
@@ -104,15 +105,17 @@ asserted procedure f4_reducegb(ring: PolyRing, basis: Basis, matrixj: MacaulayMa
         up2coef := matrix_mget_up2coef(matrixj);
         symdata := hashtable_htget_hashdata(symbol_ht);
 
+        % add all non redundant elements from basis
+        % as matrix upper rows
         for i := 1:basis_bget_nlead(basis) do <<
             nrows := matrix_mget_nrows(matrixj) + 1;
             matrix_mset_nrows(matrixj, nrows);
 
-            putv(uprows, nrows, hashtable_multiplied_poly_to_matrix_row(symbol_ht, ht, 0, etmp, getv(gens, getv(nonred, i))));
+            putv(matrix_mget_uprows(matrixj), nrows, hashtable_multiplied_poly_to_matrix_row(symbol_ht, ht, 0, etmp, getv(gens, getv(nonred, i))));
 
-            putv(up2coef, nrows, getv(nonred, i));
+            putv(matrix_mget_up2coef(matrixj), nrows, getv(nonred, i));
             % set lead index as 1
-            hashtable_hvset_idx(getv(symdata, getv(getv(uprows, nrows), 1)), 1)
+            hashtable_hvset_idx(getv(hashtable_htget_hashdata(symbol_ht), getv(getv(matrix_mget_uprows(matrixj), nrows), 1)), 1)
         >>;
 
         % needed for correct counting in symbol
@@ -121,7 +124,7 @@ asserted procedure f4_reducegb(ring: PolyRing, basis: Basis, matrixj: MacaulayMa
 
         f4_symbolic_preprocessing(basis, matrixj, ht, symbol_ht);
         for i := hashtable_htget_offset(symbol_ht):hashtable_htget_load(symbol_ht) do
-            hashtable_hvset_idx(getv(symdata, i), 1);
+            hashtable_hvset_idx(getv(hashtable_htget_hashdata(symbol_ht), i), 1);
 
         matrix_convert_hashes_to_columns(matrixj, symbol_ht);
         matrix_mset_ncols(matrixj, matrix_mget_nleft(matrixj) + matrix_mget_nright(matrixj));
@@ -159,7 +162,7 @@ asserted procedure f4_reducegb(ring: PolyRing, basis: Basis, matrixj: MacaulayMa
             >>;
             k := k + 1;
             putv(nonred, k, ntotal - i + 1);
-            putv(lead, k, hashtable_hvget_divmask(getv(htdata, getv(getv(gens, getv(nonred, k)), 1))));
+            putv(lead, k, hashtable_hvget_divmask(getv(hashtable_htget_hashdata(ht), getv(getv(gens, getv(nonred, k)), 1))));
             i := i + 1
         >>;
         basis_bset_nlead(basis, k)
@@ -174,19 +177,13 @@ asserted procedure f4_find_multiplied_reducer(basis: Basis, matrixj: MacaulayMat
     begin scalar symexps, symdata, e, etmp, divmask, blen, leaddiv, nlead, gens, 
                     nonred, htexps, explen, uprows, up2coef, i, rpoly, rexp,
                     nup, h, htdata;
-        symexps := hashtable_htget_exponents(symbol_ht);
-        symdata := hashtable_htget_hashdata(symbol_ht);
 
-        htexps := hashtable_htget_exponents(ht);
-        htdata := hashtable_htget_hashdata(ht);
-
-        e := getv(symexps, vidx);
-        etmp := getv(htexps, 1);
-        divmask := hashtable_hvget_divmask(getv(symdata, vidx));
+        e := getv(hashtable_htget_exponents(symbol_ht), vidx);
+        etmp := getv(hashtable_htget_exponents(ht), 1);
+        divmask := hashtable_hvget_divmask(getv(hashtable_htget_hashdata(symbol_ht), vidx));
 
         blen := basis_bget_ndone(basis);
         leaddiv := basis_bget_lead(basis);
-        nlead := basis_bget_nlead(basis);
         
         gens := basis_bget_gens(basis);
         nonred := basis_bget_nonred(basis);
@@ -195,18 +192,26 @@ asserted procedure f4_find_multiplied_reducer(basis: Basis, matrixj: MacaulayMat
         uprows := matrix_mget_uprows(matrixj);
         up2coef := matrix_mget_up2coef(matrixj);
 
+        % prin2t {"Start, In f4_find_multiplied_reducer"};
+        % prin2t {"Basis:", basis};
+
         % searching for a poly from whose leading monom
         % divides the given exponent e
         i := 1;
     Letsgo:  % TODO
-        while i <= nlead and not hashtable_is_monom_divisible(vidx, getv(getv(gens, i), 1), symbol_ht) do % not (land(getv(leaddiv, i), lnot(divmask)) = 0) do
+        % prin2t {"after letsgo, i = ", i};
+        % prin2t {"leaddiv = ", leaddiv};
+
+        while i <= basis_bget_nlead(basis) and not (land(getv(leaddiv, i), lnot(divmask)) = 0) do
             i := i + 1;
+        
+        % prin2t {"In f4_find_multiplied_reducer, i = ", i};
 
         % here found polynomial from basis with leading monom
         % dividing symbol_ht.exponents[vidx]
-        if i <= nlead then <<
+        if i <= basis_bget_nlead(basis) then <<
             rpoly := getv(gens, getv(nonred, i));
-            rexp := getv(htexps, getv(rpoly, 1));
+            rexp := getv(hashtable_htget_exponents(ht), getv(rpoly, 1));
 
             for j := 1:explen do <<
                 % if it actually does not divide and divmask lies
@@ -218,14 +223,17 @@ asserted procedure f4_find_multiplied_reducer(basis: Basis, matrixj: MacaulayMat
             >>;
             % now etmp = e // rexp in terms of monomias,
             % hash is linear
-            h := hashtable_hvget_hash(getv(symdata, vidx)) - hashtable_hvget_hash(getv(htdata, getv(rpoly, 1)));
+            h := hashtable_hvget_hash(getv(hashtable_htget_hashdata(symbol_ht), vidx)) - hashtable_hvget_hash(getv(hashtable_htget_hashdata(ht), getv(rpoly, 1)));
             
             nup := matrix_mget_nup(matrixj);
-            putv(uprows, nup + 1, hashtable_multiplied_poly_to_matrix_row(symbol_ht, ht, h, etmp, rpoly));
-            putv(up2coef, nup + 1, getv(nonred, i));
+            putv(matrix_mget_uprows(matrixj), nup + 1, hashtable_multiplied_poly_to_matrix_row(symbol_ht, ht, h, etmp, rpoly));
+            putv(matrix_mget_up2coef(matrixj), nup + 1, getv(nonred, i));
+            
+            % Julia:
+            symdata := hashtable_htget_hashdata(symbol_ht);
 
             % upsize matrixj
-            hashtable_hvset_idx(getv(symdata, vidx), 2);
+            hashtable_hvset_idx(getv(hashtable_htget_hashdata(symbol_ht), vidx), 2);
             matrix_mset_nup(matrixj, nup + 1);
             i := i + 1
         >>
@@ -253,11 +261,8 @@ asserted procedure f4_symbolic_preprocessing(basis: Basis, matrixj: MacaulayMatr
         >>;
 
         if f4_debug() then <<
-            prin2t {"f4_symbolic_preprocessing: ZEROOOOOOOO: ht", ht}
-        >>;
-
-        if f4_debug() then <<
-            prin2t {"f4_symbolic_preprocessing: ONE: symbol_ht", symbol_ht}
+            prin2t {"f4_symbolic_preprocessing: ONE: symbol_ht", symbol_ht};
+            prin2t {"f4_symbolic_preprocessing: ONE: matrixj", matrixj};
         >>;
 
         % for each lcm present in symbolic_ht set on select stage
@@ -265,10 +270,9 @@ asserted procedure f4_symbolic_preprocessing(basis: Basis, matrixj: MacaulayMatr
         % First round, we add multiplied polynomials which divide  =#
         % a monomial exponent from selected spairs
         while i <= symbol_load do <<
-            symdata := hashtable_htget_hashdata(symbol_ht);
             % not a reducer already
-            if hashtable_hvget_idx(getv(symdata, i)) = 0 then <<
-                hashtable_hvset_idx(getv(symdata, i), 1);
+            if hashtable_hvget_idx(getv(hashtable_htget_hashdata(symbol_ht), i)) = 0 then <<
+                hashtable_hvset_idx(getv(hashtable_htget_hashdata(symbol_ht), i), 1);
                 matrix_mset_ncols(matrixj, matrix_mget_ncols(matrixj) + 1);
                 f4_find_multiplied_reducer(basis, matrixj, ht, symbol_ht, i)
             >>;
@@ -276,7 +280,8 @@ asserted procedure f4_symbolic_preprocessing(basis: Basis, matrixj: MacaulayMatr
         >>;
 
         if f4_debug() then <<
-            prin2t {"f4_symbolic_preprocessing: TWO: symbol_ht", symbol_ht}
+            prin2t {"f4_symbolic_preprocessing: TWO: symbol_ht", symbol_ht};
+            prin2t {"f4_symbolic_preprocessing: TWO: matrixj", matrixj};
         >>;
 
         % Second round, we add multiplied polynomials which divide  =#
@@ -287,10 +292,8 @@ asserted procedure f4_symbolic_preprocessing(basis: Basis, matrixj: MacaulayMatr
                 matrix_mset_uprows(matrixj, dv_resize(matrix_mget_uprows(matrixj), matrix_mget_size(matrixj)));
                 matrix_mset_up2coef(matrixj, dv_resize(matrix_mget_up2coef(matrixj), matrix_mget_size(matrixj)))
             >>;
-
-            symdata := hashtable_htget_hashdata(symbol_ht);
             
-            hashtable_hvset_idx(getv(symdata, i), 1);
+            hashtable_hvset_idx(getv(hashtable_htget_hashdata(symbol_ht), i), 1);
             matrix_mset_ncols(matrixj, matrix_mget_ncols(matrixj) + 1);
             f4_find_multiplied_reducer(basis, matrixj, ht, symbol_ht, i);
             i := i + 1
@@ -307,10 +310,15 @@ asserted procedure f4_symbolic_preprocessing(basis: Basis, matrixj: MacaulayMatr
 
 %--------------------------------------------------------------------------------------------------
 
+% Julia:
+% for history
+% smacro procedure symdata(symbol_ht);
+%     hashtable_htget_hashdata(symbol_ht);
+
 asserted procedure f4_select_normal(pairset: Pairset, basis: Basis, matrixj: MacaulayMatrix, 
                                 ht: MonomialHashtable, symbol_ht: MonomialHashtable);
     begin scalar ps, min_idx, npairs, uprows, up2coef, lowrows,
-                    gens, htexps, htdata, symdata, etmp, i,
+                    gens, htexps, htdata, etmp, i, symdata,
                     loadj, lcmj, j, bgens, prev, poly, vidx, eidx, elcm,
                     htmp, min_deg, explen, low2coef;
         
@@ -333,10 +341,10 @@ asserted procedure f4_select_normal(pairset: Pairset, basis: Basis, matrixj: Mac
 
         matrix_reinitialize_matrix(matrixj, npairs);
 
-        uprows := matrix_mget_uprows(matrixj);
-        up2coef := matrix_mget_up2coef(matrixj);
-        low2coef := matrix_mget_low2coef(matrixj);
-        lowrows := matrix_mget_lowrows(matrixj);
+        % uprows := matrix_mget_uprows(matrixj);
+        % up2coef := matrix_mget_up2coef(matrixj);
+        % low2coef := matrix_mget_low2coef(matrixj);
+        % lowrows := matrix_mget_lowrows(matrixj);
 
         % polynomials from pairs in order (p11, p12)(p21, p21)
         % (future rows of the matrixj)
@@ -354,7 +362,7 @@ asserted procedure f4_select_normal(pairset: Pairset, basis: Basis, matrixj: Mac
             prin2t {"f4_select_normal: symbol_ht", symbol_ht}
         >>;
 
-        etmp := getv(htexps, 1);
+        etmp := getv(hashtable_htget_exponents(ht), 1);
         i := 1;
         while i <= npairs do <<
             
@@ -395,24 +403,29 @@ asserted procedure f4_select_normal(pairset: Pairset, basis: Basis, matrixj: Mac
             vidx := getv(poly, 1);
 
             % first generator exponent
-            eidx := getv(htexps, vidx);
+            eidx := getv(hashtable_htget_exponents(ht), vidx);
             % exponent of lcm corresponding to first generator
-            elcm := getv(htexps, lcmj);
+            elcm := getv(hashtable_htget_exponents(ht), lcmj);
             for u := 1:explen do
                 putv(etmp, u, getv(elcm, u) - getv(eidx, u));
             % now etmp contents complement to eidx in elcm
 
             % hash of complement
-            htmp := hashtable_hvget_hash(getv(htdata, lcmj)) - hashtable_hvget_hash(getv(htdata, vidx));
+            htmp := hashtable_hvget_hash(getv(hashtable_htget_hashdata(ht), lcmj)) - hashtable_hvget_hash(getv(hashtable_htget_hashdata(ht), vidx));
 
             % add row as a reducer
             matrix_mset_nup(matrixj, matrix_mget_nup(matrixj) + 1);
-            putv(uprows, matrix_mget_nup(matrixj), hashtable_multiplied_poly_to_matrix_row(symbol_ht, ht, htmp, etmp, poly));
+
+            putv(matrix_mget_uprows(matrixj), matrix_mget_nup(matrixj), hashtable_multiplied_poly_to_matrix_row(symbol_ht, ht, htmp, etmp, poly));
+
+            symdata := hashtable_htget_hashdata(symbol_ht);
+
             % map upper row to index in basis
-            putv(up2coef, matrix_mget_nup(matrixj), prev);
+            putv(matrix_mget_up2coef(matrixj), matrix_mget_nup(matrixj), prev);
 
             %  mark lcm column as reducer in symbolic hashtable
-            hashtable_hvset_idx(getv(symdata, getv(getv(uprows, matrix_mget_nup(matrixj)), 1)), 2);
+            hashtable_hvset_idx(getv(hashtable_htget_hashdata(symbol_ht), getv(getv(matrix_mget_uprows(matrixj), matrix_mget_nup(matrixj)), 1)), 2);
+            
             % increase number of rows set
             matrix_mset_nrows(matrixj, matrix_mget_nrows(matrixj) + 1);
 
@@ -428,25 +441,25 @@ asserted procedure f4_select_normal(pairset: Pairset, basis: Basis, matrixj: Mac
                 % we can do so as long as generators are sorted
                 if getv(gens, k) neq prev then <<
                     % if the table was reallocated
-                    elcm := getv(htexps, lcmj);
+                    elcm := getv(hashtable_htget_exponents(ht), lcmj);
 
                     prev := getv(gens, k);
                     poly := getv(bgens, prev);
                     vidx := getv(poly, 1);
                     %  leading monom idx
-                    eidx := getv(htexps, vidx);
+                    eidx := getv(hashtable_htget_exponents(ht), vidx);
                     for u := 1:explen do
                         putv(etmp, u, getv(elcm, u) - getv(eidx, u));
                     
-                    htmp := hashtable_hvget_hash(getv(htdata, lcmj)) - hashtable_hvget_hash(getv(htdata, vidx));
+                    htmp := hashtable_hvget_hash(getv(hashtable_htget_hashdata(ht), lcmj)) - hashtable_hvget_hash(getv(hashtable_htget_hashdata(ht), vidx));
 
                     %  add row to be reduced
                     matrix_mset_nlow(matrixj, matrix_mget_nlow(matrixj) + 1);
-                    putv(lowrows, matrix_mget_nlow(matrixj), hashtable_multiplied_poly_to_matrix_row(symbol_ht, ht, htmp, etmp, poly));
+                    putv(matrix_mget_lowrows(matrixj), matrix_mget_nlow(matrixj), hashtable_multiplied_poly_to_matrix_row(symbol_ht, ht, htmp, etmp, poly));
                     % map lower row to index in basis
-                    putv(low2coef, matrix_mget_nlow(matrixj), prev);
+                    putv(matrix_mget_low2coef(matrixj), matrix_mget_nlow(matrixj), prev);
 
-                    hashtable_hvset_idx(getv(symdata, getv(getv(lowrows, matrix_mget_nlow(matrixj)), 1)), 2);
+                    hashtable_hvset_idx(getv(hashtable_htget_hashdata(symbol_ht), getv(getv(matrix_mget_lowrows(matrixj), matrix_mget_nlow(matrixj)), 1)), 2);
 
                     matrix_mset_nrows(matrixj, matrix_mget_nrows(matrixj) + 1)
                 >>
@@ -482,7 +495,7 @@ asserted procedure f4_select_normal(pairset: Pairset, basis: Basis, matrixj: Mac
 %   - divmasks in basis are filled and coincide to divmasks in hashtable
 %
 % Julia: in Reduce, there is no `tracer`, `linalg`, and `rng` arguments
-asserted procedure f4_f4(ring: PolyRing, basis: Basis, ht: MonomialHashtable, reduced: Bool);
+asserted procedure f4_f4(ring: PolyRing, basis: Basis, ht: MonomialHashtable, reduced: Boolean);
     begin scalar pairset, matrixj, update_ht, symbol_ht, plcm, d;
 
         ASSERT(io_prget_ord(ring) = hashtable_htget_ord(ht));

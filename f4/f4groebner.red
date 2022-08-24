@@ -17,7 +17,7 @@ asserted procedure groebner_select_tablesize(ring: PolyRing, exps: Vector): Inte
 %   . ring - a polynomial ring 
 %   . exps - a list of polynomials' terms (not hashed)
 %   . coeffs - a list of polynomials' coefficients
-asserted procedure groebner_groebner(ring: PolyRing, exps: Vector, coeffs: Vector): List;
+asserted procedure groebner_groebner(ring: PolyRing, exps: Vector, coeffs: Vector): DottedPair;
     begin scalar tablesize, basis, ht, gbexps;
         
         % select hashtable size

@@ -274,7 +274,7 @@ asserted procedure basis_update_pairset(
         isred := basis_bget_isred(basis);
         new_lead := getv(getv(basis_bget_gens(basis), idx), 1);
         
-        % for each combination (new_Lead, basis.gens[i][1])
+        % for each combination (new_Lead, basis.gens[i, 1])
         % generate a pair
         for i := 1:bl-1 do <<
             putv(plcm, i, hashtable_get_lcm(getv(getv(basis_bget_gens(basis), i), 1), new_lead, ht, update_ht));
@@ -288,10 +288,12 @@ asserted procedure basis_update_pairset(
         >>;
 
         % traverse existing pairs
-        for i := 1:pl do <<
+        % Julia !!!BUG IN JULIA!!!
+        for i := 1:pl-1 do <<
             psi := getv(ps, i);
             j := basis_spget_poly1(psi);
             l := basis_spget_poly2(psi);
+
             m := max(basis_spget_deg(getv(ps, pl + l)), basis_spget_deg(getv(ps, pl + j)));
             
             % if an existing pair is divisible by lead of new poly
@@ -375,8 +377,8 @@ asserted procedure basis_update_basis(basis: Basis, ht: MonomialHashtable, updat
         htdata := hashtable_htget_hashdata(ht);
         for i := basis_bget_ndone(basis)+1:basis_bget_ntotal(basis) do
             if getv(isred, i) = 0 then <<
-                putv(lead, k, hashtable_hvget_divmask(getv(htdata, getv(getv(gens, i), 1))));
-                putv(nonred, k, i);
+                lead[k] := hashtable_hvget_divmask(htdata[gens[i, 1]]);
+                nonred[k] := i;
                 k := k + 1
             >>;
 
@@ -401,7 +403,7 @@ asserted procedure basis_is_redundant(pairset: Pairset, basis: Basis,
         ps := basis_psget_pairs(pairset);
 
         % lead of new polynomial
-        lead_new := getv(getv(gens, idx), 1);
+        lead_new := gens[idx, 1];
         % degree of lead
         lead_deg := hashtable_hvget_deg(getv(htdata, lead_new));
 
@@ -434,7 +436,7 @@ asserted procedure basis_is_redundant(pairset: Pairset, basis: Basis,
 
 asserted procedure basis_update(pairset: Pairset, basis: Basis, 
                         ht: MonomialHashtable, update_ht: MonomialHashtable, 
-                        plcm: Vector): Integer;
+                        plcm: Vector): Vector;
     begin scalar npivs, npairs, pairset_size;
 
         % Always check redundancy, for now
@@ -609,7 +611,7 @@ asserted procedure basis_insert_plcms_in_basis_hash_table(pairset: Pairset, offj
                     ht: MonomialHashtable, update_ht: MonomialHashtable, 
                     basis: Basis, plcm: Vector, ifirst: Integer, ilast: Integer);
     begin scalar explen, gens, modj, ps, upddata, updexps, htexps, httable, htdata,
-                    m, l, genspoly1, genspoly2, h, n, k, i, hm, ehm, pos, ll;
+                    m, l, genspoly1, genspoly2, h, n, k, i, hm, ehm, pos, ll, uhd;
     
         % including ifirst and not including ilast
 
