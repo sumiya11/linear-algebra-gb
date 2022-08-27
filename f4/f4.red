@@ -53,6 +53,7 @@ module f4;
 % . io - input-output conversions of polynomial representations
 create!-package('(f4 f4groebner f4f4 f4hashtable f4basis f4matrix f4sorting f4io f4poly f4dv), nil);
 
+loadtime load!-package 'vector88;
 compiletime load!-package 'vector88;
 
 % Assertions should be OFF in production.
