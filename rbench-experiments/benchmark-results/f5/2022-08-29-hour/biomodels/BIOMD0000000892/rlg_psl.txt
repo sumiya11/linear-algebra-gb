@@ -1,0 +1,108 @@
+load_package f5$
+
+Usage: profile p_1, ..., p_n;           profile expr procedures p_1, ..., p_n
+       unprofile p_1, ..., p_n;         stop profiling p_1, ..., p_n
+       proprint([p_1,..., p_n | all]);  print collected data in tables
+       proall();                        list all profiled procedures
+       pronested();                     list procedures with nested calls
+       proreset();                      delete all collected data
+       prousage();                      this information
+*** (core_interreduceinput): base 16#14D3A70, length 10#109 bytes
+*** (core_normalform): base 16#14D3B50, length 10#76 bytes
+*** (core_topreductionf5): base 16#14D3C00, length 10#76 bytes
+
+torder({}, revgradlex)$
+
+
+
+k1 := 1;
+
+
+k1 := 1
+
+k2 := 199/100;
+
+
+       199
+k2 := -----
+       100
+
+k3 := 36000000;
+
+
+k3 := 36000000
+
+k4 := 1/100;
+
+
+        1
+k4 := -----
+       100
+
+k5 := 9/40000000;
+
+
+          9
+k5 := ----------
+       40000000
+
+k6 := 1;
+
+
+k6 := 1
+
+k7 := 29/10;
+
+
+       29
+k7 := ----
+       10
+
+k8 := 6;
+
+
+k8 := 6
+
+k9 := 0;
+
+
+k9 := 0
+
+k10 := 1/2;
+
+
+        1
+k10 := ---
+        2
+
+k11 := 4/5;
+
+
+        4
+k11 := ---
+        5
+
+k12 := 1;
+
+
+k12 := 1
+
+operator diff$
+
+
+odes := { diff(x1, t) = (1*k12*(k1 + k2*x1*(1 - (x1 + 1)/k3)) + (-1)*k12*(k4*x1 + (1 - k10*k11)*k5*x3*x1))/k12,
+  diff(x2, t) = (1*k12*(1 - k10*k11)*k5*x3*x1 + (-1)*k12*k6*x2)/k12,
+  diff(x3, t) = (1*k12*(1 - (k9 + k11)/2)*k7*x2 + (-1)*k12*k8*x3)/k12,
+  diff(x4, t) = (1*k12*(k9 + k11)/2*k7*x2 + (-1)*k12*k8*x4)/k12 }$
+
+
+odes := for each o in odes collect part(o, 2)$
+
+
+
+gb := f5(odes)$
+
+
+
+end;
+

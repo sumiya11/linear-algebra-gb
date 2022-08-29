@@ -1,0 +1,45 @@
+% hairer-1 system in revgradlex
+% characteristic 0
+% 0 dim
+%
+% PoSSo test suite
+% https://www-sop.inria.fr/saga/POL/BASE/3.posso/ha-mo1.dir/index.html
+
+load_package f5;
+
+Usage: profile p_1, ..., p_n;           profile expr procedures p_1, ..., p_n
+       unprofile p_1, ..., p_n;         stop profiling p_1, ..., p_n
+       proprint([p_1,..., p_n | all]);  print collected data in tables
+       proall();                        list all profiled procedures
+       pronested();                     list procedures with nested calls
+       proreset();                      delete all collected data
+       prousage();                      this information
++++ core_interreduceinput compiled, 11 + 16 bytes
++++ core_normalform compiled, 21 + 24 bytes
++++ core_topreductionf5 compiled, 22 + 24 bytes
+
+
+system := {
+  a - f,
+  b - g - h,
+  c + d + ee - 1,
+  b*c + a*d - 1/2,
+  b^2*c + a^2*d - 1/3,
+  a*c*g - 1/6
+}$
+
+
+
+vars := {a,b,c,d,ee,f,g,h}$
+
+
+torder(vars, revgradlex)$
+
+
+
+gb := f5(system)$
+
+
+
+end;
+
