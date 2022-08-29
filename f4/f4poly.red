@@ -12,11 +12,49 @@ struct Coeffs checked by listp;
 % Coeff can be either an Integer or a Standard Quotient.
 struct Coeff checked by f5_isCoeff;
 
-asserted procedure poly_initRing(vars, ord);
-    <<
-        global!-dipvars!* := vars;
-        vdpsortmode!* := ord
-    >>;
+% Returns the current torder
+asserted procedure poly_extractTorder(): List;
+   begin scalar oldTorder;
+      oldTorder := torder('(list));
+      torder(cdr oldTorder);
+      dipsortingmode(vdpsortmode!*);
+      return oldTorder
+   end;
+
+% Initializes polynomial ring with the parameters from `u`,
+% and returns the corresponding torder.
+%
+% Possible options are:
+%  - u is nil, then change nothing;
+%  - u is of length 1, then set variables in torder to the only element of u;
+%  - u is of length 2, then set variables and order in torder to the ones of u.
+asserted procedure poly_initRing(u: List): List;
+   begin scalar vars, ord, oldTorder;
+      if null u then <<
+         oldTorder := poly_extractTorder()
+      >> else if length(u) = 1 then <<
+         vars := pop u;
+         oldTorder := poly_extractTorder();
+         global!-dipvars!* := 'list . vars
+      >> else <<
+         vars := pop u;
+         ord  := pop u;
+         if null u then
+            oldTorder := torder({'list . vars, ord})
+         else
+            oldTorder := torder({'list . vars, ord, pop u})
+      >>;
+      return oldTorder
+   end;
+
+asserted procedure poly_getGlobalVars();
+    global!-dipvars!*;
+
+asserted procedure poly_getGlobalOrd();
+    vdpsortmode!*;
+
+asserted procedure poly_getVarsAndOrd();
+    poly_getGlobalVars() . poly_getGlobalOrd();
 
 % Invariant: the first entry in the exponent list is the sum of subsequent entries
 
@@ -88,9 +126,12 @@ asserted procedure poly_insertExp1(ev: List, v: Any, dg: Integer, vars: List): L
    else
       car ev . poly_insertExp1(cdr ev, v, dg, cdr vars);
 
-asserted inline procedure poly_2aExp(e);
+asserted procedure poly_2aExp(e);
    % Returns list of prefix equivalents of exponent vector e.
-   ev_2aExp1(cdr e,  cdr global!-dipvars!*);
+   <<
+   prin2t {e, global!-dipvars!*};
+   ev_2aExp1(cdr e,  cdr global!-dipvars!*)
+   >>;
 
 procedure ev_2aExp1(u,v);
    if null u then

@@ -138,10 +138,6 @@ asserted procedure sorting_sort_pairset_by_degree(ps: Pairset, from: Integer, sz
 
         part := sort(part, 'sorting_comparator_sort_pairset_by_degree);
 
-        part := sort(part, function(lambda(x, y); basis_spget_deg(x) < basis_spget_deg(y)));
-        part := sort(part, quote(lambda(x, y); basis_spget_deg(x) < basis_spget_deg(y)));
-        part := sort(part, '(lambda (x y) (lessp (basis_spget_deg x) (basis_spget_deg y) ) ) );
-
         for i := from:from+sz do
             putv(pairs, i, pop(part))
     end;

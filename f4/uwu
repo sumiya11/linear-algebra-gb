@@ -1,0 +1,11 @@
+
+sdssd;
+
+load_package f5;
+
+sdf
+
+f5({x1}, {x1}, revgradlex);
+
+end;
+

@@ -54,6 +54,8 @@ asserted procedure io_convert_to_internal(polys: List, vars: List, ord: Any): Li
         if f4_debug() then
             prin2t "convert_to_internal..";
         
+        vars := cdr vars;
+
         n := length(polys);
         gens := dv_undef(n);
         coeffs := dv_undef(n);
@@ -63,7 +65,7 @@ asserted procedure io_convert_to_internal(polys: List, vars: List, ord: Any): Li
             prin2t {"convert_to_internal: ring:", ring};
 
         % Julia!!
-        poly_initRing('list . vars, ord);
+        % poly_initRing('list . vars, ord);
 
         explen := io_prget_explen(ring);
 

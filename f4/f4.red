@@ -144,44 +144,62 @@ put('f4, 'psopfn, 'f4_groebner);
 
 % AM entry point
 asserted procedure f4_groebner(u: List): List;
-    begin scalar polynomials, ring, exps, coeffs, 
-                    bexps, bcoeffs, vars, ord;
+    begin scalar polynomials, ring, exps, coeffs, ans, 
+                    bexps, bcoeffs, vars, ord, w, saveTorder;
         if null u or not (listp u) then
             f4_argumentError();
-        
         
         % Extract the list of polynomials
         polynomials := reval pop u;
         if not (listp polynomials) or not (pop polynomials eq 'list) or null polynomials then
             f4_argumentError();
-        if null u then
-            f4_argumentError();
-        
+
         % Extract the list of variables and the sort mode
         % to initialize the polynomial ring
         % variables and sort mode are specified in f4 call
-        vars := reval pop u;
-        if not (listp vars) or not (pop vars eq 'list) then
-            f4_argumentError();
-        for each var in vars do
+        saveTorder := if not null u then <<
+            % variables and sort mode are specified in f4 call
+            vars := reval pop u;
+            if not (listp vars) or not (pop vars eq 'list) then
+                f4_argumentError();
+            for each var in vars do
             if not sfto_kernelp(var) then
                 f4_argumentError();
-        ord := pop u;
-
-        if f4_debug() then
-            prin2t {"AM: Input:", polynomials, vars, ord};
-
+            ord := pop u;
+            poly_initRing({vars, ord})
+        >> else if not null cdr poly_getGlobalVars() then <<
+            % both variables and sort mode have been specified using torder
+            poly_initRing(nil)
+        >> else <<
+            % sort mode has been specified using torder,
+            % variables are taken from the inputBasis
+            for each f in inputBasis do <<
+                fsq := simp f;
+                varsNum := union(varsNum, kernels numr fsq);
+                varsDen := union(varsDen, kernels denr fsq)
+            >>;
+            if varsDen then
+                lprim {varsDen, "implicitly declared as parameters"};
+            vars := lto_setminus(varsNum, varsDen);
+            vars := sort(vars, 'ordp);
+            poly_initRing({vars})
+        >>;
+        
+        % get the current variables and order 
+        vars . ord := poly_getVarsAndOrd();
         {ring, exps, coeffs} := io_convert_to_internal(polynomials, vars, ord);
-        
-        if f4_debug() then
-            prin2t {"AM: Converted:", ring, exps, coeffs};
 
-        bexps . bcoeffs := groebner_groebner(ring, exps, coeffs);
+        % run under error catch to recover the order in case of error 
+        w := errorset({'groebner_groebner, mkquote ring, mkquote exps, mkquote coeffs}, t, !*backtrace);
         
-        if f4_debug() then
-            prin2t {"AM: groebner:", bexps, bcoeffs};
+        bexps . bcoeffs := car w;
+        ans := 'list . io_convert_to_output(ring, bexps, bcoeffs);
 
-        return 'list . io_convert_to_output(ring, bexps, bcoeffs)
+        torder cdr saveTorder;
+        if errorp w then
+            return nil;
+
+        return ans
     end;
 
 % f4 argument error
