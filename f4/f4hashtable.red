@@ -356,6 +356,7 @@ asserted procedure hashtable_enlarge_hash_table(ht: MonomialHashtable);
     begin scalar htsize, flag, modj, he, hidx, htdata, httable;
         htsize := hashtable_htget_size(ht) * 2;
         hashtable_htset_size(ht, htsize);
+        % 3 vectors of equal size inside ht: hashdata (add), exponents (add), hashtable (table)
         hashtable_htset_hashdata(ht, dv_resize(hashtable_htget_hashdata(ht), htsize));
         hashtable_htset_exponents(ht, dv_resize(hashtable_htget_exponents(ht), htsize));
 
@@ -367,16 +368,23 @@ asserted procedure hashtable_enlarge_hash_table(ht: MonomialHashtable);
         modj := htsize - 1;
         for i := hashtable_htget_offset(ht) : hashtable_htget_load(ht) do <<
             % hash for this elem is already computed
-            he := hashtable_hvget_hash(getv(htdata, i));
+            he := hashtable_hvget_hash(htdata[i]);
             hidx := he;
-            flag := t;
-            for j := 1:htsize do <<
-                hidx := hashtable_hashnextindex(he, j, modj);
-                if flag and getv(httable, hidx) = 0 then <<
-                    putv(httable, hidx, i);
-                    flag := nil
-                >>
-            >>
+            j := 0;
+            repeat <<
+                j := j + 1;
+                ASSERT(j <= htsize);
+                hidx := hashtable_hashnextindex(he, j, modj)
+            >> until httable[hidx] = 0;
+            httable[hidx] := i
+            % flag := t;
+            % for j := 1:htsize do <<
+            %     hidx := hashtable_hashnextindex(he, j, modj);
+            %     if flag and getv(httable, hidx) = 0 then <<
+            %         putv(httable, hidx, i);
+            %         flag := nil
+            %     >>
+            % >>
         >>    
     end;
 

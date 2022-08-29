@@ -1,7 +1,13 @@
 module f4poly;
 
+% We use the term order comparators for exponent lists from dipoly
+load!-package 'dipoly;
+
 fluid '(global!-dipvars!*);
 fluid '(vdpsortmode!*);
+
+global!-dipvars!* := 'list . nil;
+vdpsortmode!* := 'lex;
 
 procedure f5_isPolynomial(x); eqcar(x, 'p);
 procedure f5_isCoeff(x); sqp(x) or integerp(x);
@@ -128,10 +134,7 @@ asserted procedure poly_insertExp1(ev: List, v: Any, dg: Integer, vars: List): L
 
 asserted procedure poly_2aExp(e);
    % Returns list of prefix equivalents of exponent vector e.
-   <<
-   prin2t {e, global!-dipvars!*};
-   ev_2aExp1(cdr e,  cdr global!-dipvars!*)
-   >>;
+   ev_2aExp1(cdr e,  cdr global!-dipvars!*);
 
 procedure ev_2aExp1(u,v);
    if null u then

@@ -56,6 +56,8 @@ create!-package('(f4 f4groebner f4f4 f4hashtable f4basis f4matrix f4sorting f4io
 loadtime load!-package 'vector88;
 compiletime load!-package 'vector88;
 
+load!-package 'rltools;
+
 % Assertions should be OFF in production.
 load!-package 'assert;
 off1 'assert;
@@ -107,6 +109,9 @@ struct CoeffsVector; % = Vector{Coeff}
 % Column index of a matrix
 struct ColumnIdx; % = Int32
 
+fluid '(!*backtrace);
+
+
 procedure wuwu(n);
     begin scalar v;
         v := mkvect(n);
@@ -145,7 +150,8 @@ put('f4, 'psopfn, 'f4_groebner);
 % AM entry point
 asserted procedure f4_groebner(u: List): List;
     begin scalar polynomials, ring, exps, coeffs, ans, 
-                    bexps, bcoeffs, vars, ord, w, saveTorder;
+                    bexps, bcoeffs, vars, ord, w, saveTorder,
+                    varsNum, fsq, varsDen;
         if null u or not (listp u) then
             f4_argumentError();
         
@@ -173,7 +179,7 @@ asserted procedure f4_groebner(u: List): List;
         >> else <<
             % sort mode has been specified using torder,
             % variables are taken from the inputBasis
-            for each f in inputBasis do <<
+            for each f in polynomials do <<
                 fsq := simp f;
                 varsNum := union(varsNum, kernels numr fsq);
                 varsDen := union(varsDen, kernels denr fsq)
@@ -192,12 +198,12 @@ asserted procedure f4_groebner(u: List): List;
         % run under error catch to recover the order in case of error 
         w := errorset({'groebner_groebner, mkquote ring, mkquote exps, mkquote coeffs}, t, !*backtrace);
         
+        if errorp w then
+            return nil;
         bexps . bcoeffs := car w;
         ans := 'list . io_convert_to_output(ring, bexps, bcoeffs);
 
         torder cdr saveTorder;
-        if errorp w then
-            return nil;
 
         return ans
     end;

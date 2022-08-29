@@ -3,6 +3,48 @@ module f4sorting;
 
 %--------------------------------------------------------------------------------------------------
 
+asserted procedure sorting_quicksort_selectpivot(v: Vector, lo: Integer, hi: Integer, cmp);
+    v[lo];
+
+% select a pivot, and partition v according to the pivot
+asserted procedure sorting_quicksort_partition(v: Vector, lo: Integer, hi: Integer, cmp);
+    begin scalar pivot, i, j, c;
+        pivot := sorting_quicksort_selectpivot(v, lo, hi, cmp);
+        i := lo;
+        j := hi;
+        while t do <<
+            i := i + 1;
+            j := j - 1;
+            while apply(cmp, {v[i], pivot}) do
+                i := i + 1;
+            while apply(cmp, {pivot, v[j]}) do
+                j := j - 1; 
+            if i >= j then
+                go to Break;
+            c := v[i];
+            v[i] := v[j];
+            v[j] := c
+        >>;
+    Break:
+        v[lo] := v[j];
+        v[j] := pivot;
+        return j
+    end;
+
+asserted procedure sorting_quicksort_chunk(v: Vector, lo: Integer, hi: Integer, cmp);
+    begin scalar j;
+        if lo + 1 >= hi then
+            return;
+        j := sorting_quicksort_partition(v, lo, hi, cmp);
+        sorting_quicksort_chunk(v, lo, j-1, cmp);
+        sorting_quicksort_chunk(v, j+1, hi, cmp)
+    end;
+
+asserted procedure sorting_quicksort(v: Vector, cmp);
+    sorting_quicksort_chunk(v, 1, upbv(v), cmp);
+
+%--------------------------------------------------------------------------------------------------
+
 % degrevlex exponent vector comparison
 asserted procedure sorting_exponent_isless_drl(ea: ExponentVector, eb: ExponentVector): Boolean;
     begin integer i;

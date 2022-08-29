@@ -8,7 +8,7 @@ asserted procedure groebner_select_tablesize(ring: PolyRing, exps: Vector): Inte
     begin scalar nvars;
         % Julia: for now, we want only 2^14 elements for debugging purposes
         nvars := io_prget_nvars(ring);
-        return 2^14
+        return 2^14  % 2^10 - 2^16 in Julia
     end;
 
 %--------------------------------------------------------------------------------------------------

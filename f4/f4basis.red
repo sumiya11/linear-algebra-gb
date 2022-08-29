@@ -405,7 +405,7 @@ asserted procedure basis_is_redundant(pairset: Pairset, basis: Basis,
         % lead of new polynomial
         lead_new := gens[idx, 1];
         % degree of lead
-        lead_deg := hashtable_hvget_deg(getv(htdata, lead_new));
+        lead_deg := hashtable_hvget_deg(htdata[lead_new]);
 
         result := nil;
 
@@ -445,6 +445,7 @@ asserted procedure basis_update(pairset: Pairset, basis: Basis,
         npivs := basis_bget_ntotal(basis);
 
         % number of potential critical pairs to add
+        % npairs := npivs * (npivs + 1) / 2 + basis_bget_ndone(basis) * npivs
         npairs := basis_bget_ndone(basis) * npivs;
         for i := 1:npivs do
             npairs := npairs + i;
