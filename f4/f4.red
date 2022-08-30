@@ -111,6 +111,18 @@ struct ColumnIdx; % = Int32
 
 fluid '(!*backtrace);
 
+fluid '(coeff_plus!* coeff_times!*);
+
+procedure coeff_modular(flag);
+    if flag then <<
+
+    >> else <<
+        coeff_plus!* := function addsq;
+        coeff_times!* := function multsq
+    >>;
+
+inline procedure coeff_plus(x, y);
+    apply(coeff_plus!*, {x, y});
 
 procedure wuwu(n);
     begin scalar v;
