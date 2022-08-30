@@ -109,6 +109,10 @@ struct CoeffsVector; % = Vector{Coeff}
 % Column index of a matrix
 struct ColumnIdx; % = Int32
 
+struct PrimeTracker;
+
+struct CoeffAccum;
+
 fluid '(!*backtrace);
 
 

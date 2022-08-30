@@ -22,9 +22,6 @@ asserted procedure groebner_groebner(ring: PolyRing, exps: Vector, coeffs: Vecto
         
         % select hashtable size
         tablesize := groebner_select_tablesize(ring, exps);
-        
-        if f4_debug() then
-            prin2t {"Hashtable size: ", tablesize};
 
         basis . ht := f4_initialize_structures(ring, exps, coeffs, tablesize);
         
@@ -32,12 +29,91 @@ asserted procedure groebner_groebner(ring: PolyRing, exps: Vector, coeffs: Vecto
         
         gbexps := basis_hash_to_exponents(basis, ht);
 
-        if f4_debug() then <<
-            prin2t {"After f4: ", basis};
-            prin2t {"exps : ", gbexps}
+        return gbexps . basis_bget_coeffs(basis)
+    end;
+
+asserted procedure groebner_groebner2(ring: PolyRing, exps: Vector, coeffs: Vector): DottedPair;
+    begin scalar;
+        
+        % select hashtable size
+        tablesize := groebner_select_tablesize(ring, exps);
+
+        gens_temp_ff . ht := f4_initialize_structures_ff(ring, exps, coeffs, tablesize);
+        gens_ff := copy_basis_thorough(gens_temp_ff);
+
+        % now hashtable is filled correctly,
+        % and gens_temp_ff exponents are correct and in correct order.
+        % gens_temp_ff coefficients are filled with random stuff and
+        % gens_temp_ff.ch is 0
+
+        % to store integer and rational coefficients of groebner basis
+        coeffaccum := coeffs_CoeffAccum();
+        % mutating?
+
+        % scale coefficients of input to integers
+        coeffs_zz := scale_denominators(coeffs);
+
+        % keeps track of used prime numbers
+        primetracker := lucky_PrimeTracker(coeffs_zz);
+
+        i := 1;
+
+        % copy basis so that we initial exponents dont get lost
+        gens_ff := copy_basis_thorough(gens_temp_ff);
+
+        prime := lucky_nextluckyprime(primetracker);
+
+        % perform reduction and store result in gens_ff
+        coeffs_reduce_modulo(coeffs_zz, basis_bget_coeffs(gens_ff), prime);
+
+        % do some things to ensure generators are correct
+        groebner_cleanup_gens(ring, gens_ff, prime);
+
+
+        f4(ring, gens_ff, ht);
+
+        modular_reconstruct_crt(coeffaccum, primetracker, basis_bget_coeffs(gens_ff), prime);
+
+        modular_reconstruct_modulo(coeffaccum, primetracker);
+
+        if correctness_correctness_check(coeffaccum, primetracker, ring, exps, coeffs, coeffs_zz, gens_temp_ff, gens_ff, ht) then
+            correct := t;
+
+        gap := 1;
+        primegaps := {1,1,1,1,1};
+        primemult := 2;
+
+        while not correct do <<
+            
+            if primegaps then
+                gap := pop(primegaps)
+            else
+                gap := gap*primemult;
+
+            for j := 1:gap do <<
+                i := i + 1;
+
+                # copy basis so that initial exponents dont get lost
+                gens_ff := basis_copy_basis_thorough(gens_temp_ff);
+                prime := lucky_nextluckyprime(primetracker);
+                % perform reduction and store result in gens_ff
+                coeffs_reduce_modulo(coeffs_zz, basis_bget_coeffs(gens_ff), prime);
+                % do some things to ensure generators are correct
+                groebner_cleanup_gens(ring, gens_ff, prime);
+
+                f4(ring, gens_ff, ht);
+
+                modular_reconstruct_crt(coeffaccum, primetracker, basis_bget_coeffs(gens_ff), prime)
+            >>;
+            
+            modular_reconstruct_modulo(coeffaccum, primetracker);
+
+            if correctness_correctness_check(coeffaccum, primetracker, ring, exps, coeffs, coeffs_zz, gens_temp_ff, gens_ff, ht) then
+                correct := t
         >>;
 
-        return gbexps . basis_bget_coeffs(basis)
+        gb_exps := basis_hash_to_exponents(gens_ff, ht);
+        return gb_exps . coeffs_caget_gb_coeffs_qq(coeffaccum)
     end;
 
 endmodule; % end of groebner module
