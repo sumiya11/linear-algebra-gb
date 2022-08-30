@@ -51,7 +51,7 @@ module f4;
 % . internaltypes - type declarations (have no practical effect in Reduce, 
 %                   but are left for consistency with Julia implementation)
 % . io - input-output conversions of polynomial representations
-create!-package('(f4 f4groebner f4f4 f4hashtable f4basis f4matrix f4sorting f4io f4poly f4dv), nil);
+create!-package('(f4 f4f4 f4hashtable f4basis f4matrix f4sorting f4io f4poly f4dv), nil);
 
 loadtime load!-package 'vector88;
 compiletime load!-package 'vector88;
@@ -115,15 +115,15 @@ struct CoeffAccum;
 
 fluid '(!*backtrace);
 
+#if (errorp (errorset (quote (itimes2 (expt 2 55) 2)) nil nil))
+   procedure wuwu();
+      "2^56 is bad";
+#else
+   procedure wuwu();
+      "2^56 is good";
+#endif
 
-procedure wuwu(n);
-    begin scalar v;
-        v := mkvect(n);
-        for i := 1:n do
-            v[i] := i*i;
-        return v
-    end;
-
+% turn to switch
 asserted procedure f4_debug();
     nil;
 
