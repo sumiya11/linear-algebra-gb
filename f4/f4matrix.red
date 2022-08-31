@@ -174,8 +174,26 @@ asserted procedure matrix_reinitialize_matrix(matrixj: MacaulayMatrix, npairs: I
 
 %--------------------------------------------------------------------------------------------------
 
+asserted procedure matrix_zero_coeff_vector(ring, ncols);
+    begin scalar v, ch;
+        v := dv_undef(ncols);
+        ch := io_prget_ch(ring);
+        for i := 1:dv_length(v) do
+            putv(v, i, if ch = 0 then (nil ./ 1) else 0);
+        return v
+    end;
+
+%--------------------------------------------------------------------------------------------------
+
 % Normalize `row` by first coefficient
-asserted procedure matrix_normalize_sparse_row(row: Vector): Vector;
+asserted procedure matrix_normalize_sparse_row(ring: PolyRing, row: Vector): Vector;
+    if io_prget_ch(ring) = 0 then
+        matrix_normalize_sparse_row_qq(ring, row)
+    else
+        matrix_normalize_sparse_row_ff(ring, row);
+
+% Normalize `row` by first coefficient
+asserted procedure matrix_normalize_sparse_row_qq(ring: PolyRing, row: Vector): Vector;
     begin scalar pinv;
         pinv := denr(getv(row, 1)) ./ numr(getv(row, 1));
         for i := 2:dv_length(row) do
@@ -184,10 +202,30 @@ asserted procedure matrix_normalize_sparse_row(row: Vector): Vector;
         return row
     end;
 
+% Normalize `row` by first coefficient
+asserted procedure matrix_normalize_sparse_row_ff(ring: PolyRing, row: Vector): Vector;
+    begin scalar ch, pinv;
+        ch := io_prget_ch(ring);
+        pinv := remainder(modular_invmod(getv(row, 1), ch), ch);
+        ASSERT(pinv > 0);
+
+        for i := 2:dv_length(row) do
+            putv(row, i, remainder(getv(row, i) #* pinv, ch));
+        putv(row, 1, 1);
+        return row
+    end;
+
 %--------------------------------------------------------------------------------------------------
 
 % reduces row by mul*cfs at indices positions
-asserted procedure matrix_reduce_by_pivot(row: Vector, indices: Vector, cfs: Vector);
+asserted procedure matrix_reduce_by_pivot(ring: PolyRing, row: Vector, indices: Vector, cfs: Vector);
+    if io_prget_ch(ring) = 0 then
+        matrix_reduce_by_pivot_qq(ring, row, indices, cfs)
+    else
+        matrix_reduce_by_pivot_ff(ring, row, indices, cfs);
+
+% reduces row by mul*cfs at indices positions
+asserted procedure matrix_reduce_by_pivot_qq(ring: PolyRing, row: Vector, indices: Vector, cfs: Vector);
     begin scalar mul, idx;
         mul := negsq(getv(row, getv(indices, 1)));
         
@@ -197,10 +235,30 @@ asserted procedure matrix_reduce_by_pivot(row: Vector, indices: Vector, cfs: Vec
         >>;
     end;
 
+% reduces row by mul*cfs at indices positions
+asserted procedure matrix_reduce_by_pivot_ff(ring: PolyRing, row: Vector, indices: Vector, cfs: Vector);
+    begin scalar mul, idx, ch;
+        ch := io_prget_ch(ring);
+        mul := ch #- getv(row, getv(indices, 1));
+        ASSERT(mul > 0);
+
+        for j := 1:dv_length(indices) do <<
+            idx := getv(indices, j);
+            putv(row, idx, remainder(getv(row, idx) #+ mul #* getv(cfs, j), ch))
+        >>;
+    end;
+
 %--------------------------------------------------------------------------------------------------
 
 % zero entries of densecoeffs and load coefficients cfsref to indices rowexps
-asserted procedure matrix_load_indexed_coefficients(densecoeffs: Vector, rowexps: Vector, cfsref: Vector);
+asserted procedure matrix_load_indexed_coefficients(ring: PolyRing, densecoeffs: Vector, rowexps: Vector, cfsref: Vector);
+    if io_prget_ch(ring) = 0 then
+        matrix_load_indexed_coefficients_qq(ring, densecoeffs, rowexps, cfsref)
+    else
+        matrix_load_indexed_coefficients_ff(ring, densecoeffs, rowexps, cfsref);
+
+% zero entries of densecoeffs and load coefficients cfsref to indices rowexps
+asserted procedure matrix_load_indexed_coefficients_qq(ring: PolyRing, densecoeffs: Vector, rowexps: Vector, cfsref: Vector);
     <<
         for i := 1:dv_length(densecoeffs) do
             putv(densecoeffs, i, nil . 1);
@@ -208,9 +266,18 @@ asserted procedure matrix_load_indexed_coefficients(densecoeffs: Vector, rowexps
             putv(densecoeffs, getv(rowexps, j), getv(cfsref, j))
     >>;
 
+% zero entries of densecoeffs and load coefficients cfsref to indices rowexps
+asserted procedure matrix_load_indexed_coefficients_ff(ring: PolyRing, densecoeffs: Vector, rowexps: Vector, cfsref: Vector);
+    <<
+        for i := 1:dv_length(densecoeffs) do
+            putv(densecoeffs, i, 0);
+        for j := 1:dv_length(rowexps) do
+            putv(densecoeffs, getv(rowexps, j), getv(cfsref, j))
+    >>;
+
 %--------------------------------------------------------------------------------------------------
 
-asserted procedure matrix_reduce_dense_row_by_known_pivots_sparse(densecoeffs: Vector, 
+asserted procedure matrix_reduce_dense_row_by_known_pivots_sparse(ring: PolyRing, densecoeffs: Vector, 
                         matrixj: MacaulayMatrix, basis: Basis, pivs: Vector, startcol: ColumnIdx,
                         tmp_pos: ColumnIdx, exact_colmap: Boolean);
     begin scalar ncols, nleft, mcoeffs, up2coef, low2coef, bcoeffs, k, uzero,
@@ -227,7 +294,7 @@ asserted procedure matrix_reduce_dense_row_by_known_pivots_sparse(densecoeffs: V
 
         % new row nonzero elements count
         k := 0;
-        uzero := nil ./ 1;
+        uzero := if io_prget_ch(ring) = 0 then (nil ./ 1) else 0;
 
         % new pivot index
         np := -1;
@@ -252,7 +319,7 @@ asserted procedure matrix_reduce_dense_row_by_known_pivots_sparse(densecoeffs: V
                     else                 % -//- of lower part of matrixj
                         cfs := getv(mcoeffs, getv(low2coef, i));
 
-                    matrix_reduce_by_pivot(densecoeffs, reducerexps, cfs)
+                    matrix_reduce_by_pivot(ring, densecoeffs, reducerexps, cfs)
                 >>
             >>
         >>;
@@ -316,9 +383,7 @@ asserted procedure matrix_exact_sparse_rref(ring: PolyRing, matrixj: MacaulayMat
         % we will modify them inplace when reducing by pivs
         upivs := matrix_mget_lowrows(matrixj);
 
-        densecoeffs := dv_undef(ncols);
-        for i := 1:dv_length(densecoeffs) do
-            putv(densecoeffs, i, nil ./ 1);
+        densecoeffs := matrix_zero_coeff_vector(ring, ncols);
 
         bcoeffs := basis_bget_coeffs(basis);
 
@@ -332,13 +397,13 @@ asserted procedure matrix_exact_sparse_rref(ring: PolyRing, matrixj: MacaulayMat
             
             % we load coefficients into dense array
             % into rowexps indices
-            matrix_load_indexed_coefficients(densecoeffs, rowexps, cfsref);
+            matrix_load_indexed_coefficients(ring, densecoeffs, rowexps, cfsref);
 
             % reduce it with known pivots from matrixj.uprows
             % first nonzero in densecoeffs is at startcol position
             startcol := getv(rowexps, 1);
 
-            {zeroed, newrow, newcfs} := matrix_reduce_dense_row_by_known_pivots_sparse(densecoeffs, matrixj, basis, pivs, startcol, -1, nil);
+            {zeroed, newrow, newcfs} := matrix_reduce_dense_row_by_known_pivots_sparse(ring, densecoeffs, matrixj, basis, pivs, startcol, -1, nil);
 
             % if not fully reduced
             if not zeroed then <<
@@ -356,8 +421,7 @@ asserted procedure matrix_exact_sparse_rref(ring: PolyRing, matrixj: MacaulayMat
                 % guaranteed to be from lower part
                 putv(low2coef, getv(newrow, 1), i);
 
-                if not (getv(getv(mcoeffs, i), 1) = (1 ./ 1)) then
-                    matrix_normalize_sparse_row(getv(mcoeffs, i))
+                matrix_normalize_sparse_row(ring, getv(mcoeffs, i))
             >>
         >>;
         
@@ -390,11 +454,11 @@ asserted procedure matrix_exact_sparse_rref(ring: PolyRing, matrixj: MacaulayMat
                 
                 startcol := getv(getv(pivs, k), 1);
 
-                matrix_load_indexed_coefficients(densecoeffs, getv(pivs, k), cfsref);
+                matrix_load_indexed_coefficients(ring, densecoeffs, getv(pivs, k), cfsref);
                 
                 newpivs := newpivs + 1;
 
-                {zeroed, newrow, newcfs} := matrix_reduce_dense_row_by_known_pivots_sparse(densecoeffs, matrixj, basis, pivs, startcol, startcol, nil);
+                {zeroed, newrow, newcfs} := matrix_reduce_dense_row_by_known_pivots_sparse(ring, densecoeffs, matrixj, basis, pivs, startcol, startcol, nil);
 
                 % update row and coeffs
                 putv(lowrows, newpivs, newrow);
@@ -450,9 +514,7 @@ asserted procedure matrix_interreduce_matrix_rows(ring: PolyRing, matrixj: Macau
             putv(coeffs, i, dv_copy(getv(basis_bget_coeffs(basis), getv(up2coef, i))))
         >>;
 
-        densecfs := dv_undef(matrix_mget_ncols(matrixj));
-        for i := 1:dv_length(densecfs) do
-            putv(densecfs, i, nil ./ 1);
+        densecfs := matrix_zero_coeff_vector(ring, matrix_mget_ncols(matrixj));
 
         k := matrix_mget_nrows(matrixj);
 
@@ -473,7 +535,7 @@ asserted procedure matrix_interreduce_matrix_rows(ring: PolyRing, matrixj: Macau
                 % prin2t {"densecfs = ", densecfs};
                 % prin2t {"pivs = ", pivs};
                 % prin2t {"l = ", l};
-                {zeroes, newrow, newcfs} := matrix_reduce_dense_row_by_known_pivots_sparse(densecfs, matrixj, basis, pivs, l, l, nil);
+                {zeroes, newrow, newcfs} := matrix_reduce_dense_row_by_known_pivots_sparse(ring, densecfs, matrixj, basis, pivs, l, l, nil);
 
                 putv(lowrows, k, newrow);
                 putv(coeffs, getv(low2coef, l), newcfs);
@@ -481,7 +543,7 @@ asserted procedure matrix_interreduce_matrix_rows(ring: PolyRing, matrixj: Macau
                 k := k - 1;
 
                 for idx := 1:dv_length(newrow) do
-                    putv(densecfs, getv(newrow, idx), nil ./ 1)
+                    putv(densecfs, getv(newrow, idx), if io_prget_ch(ring) = 0 then nil ./ 1 else 0)
             >>
         >>;
 

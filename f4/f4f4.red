@@ -43,44 +43,55 @@ asserted procedure f4_initialize_structures(ring: PolyRing, exponents: Vector,
         % hashtable for hashing monomials occuring in the basis
         basis := basis_initialize_basis(ring, dv_length(exponents));
         basis_ht := hashtable_initialize_basis_hash_table(ring, tablesize);
-        
-        if f4_debug() then <<
-            prin2t {"initialize_structures.."};
-            prin2t basis;
-            prin2t basis_ht
-        >>;
 
         % filling the basis and hashtable with the given inputs
         basis_fill_data(basis, basis_ht, exponents, coeffs);
-        
-        if f4_debug() then <<
-            prin2t {"initialize_structures: filled"};
-            prin2t {"Basis: ", basis};
-            prin2t {"HT: ", basis_ht}
-        >>;
 
         hashtable_fill_divmask(basis_ht);
 
-        if f4_debug() then <<
-            prin2t {"initialize_structures: divmasks"};
-            prin2t hashtable_htget_hashdata(basis_ht)
-        >>;
-
         sorting_sort_gens_by_lead_increasing(basis, basis_ht);
 
-        if f4_debug() then <<
-            prin2t {"initialize_structures: after sort by lead"};
-            prin2t basis
-        >>;
-
         basis_normalize_basis(ring, basis);
-        
-        if f4_debug() then <<
-            prin2t {"initialize_structures: after normalize"};
-            prin2t basis
-        >>;
 
         return basis . basis_ht
+    end;
+
+% Initializes Basis and MonomialHashtable structures,
+% fills input data from exponents and coeffs
+%
+% MonomialHashtable initial size is set to tablesize
+asserted procedure f4_initialize_structures_no_normalize(ring: PolyRing, exponents: Vector, 
+                                            coeffs_qq: Vector, coeffs_ff: Vector, tablesize: Integer);
+    begin scalar basis, basis_ht;
+        % basis for storing basis elements,
+        % hashtable for hashing monomials occuring in the basis
+        basis := basis_initialize_basis(ring, dv_length(exponents));
+        basis_ht := hashtable_initialize_basis_hash_table(ring, tablesize);
+        
+        % filling the basis and hashtable with the given inputs
+        basis_fill_data(basis, basis_ht, exponents, coeffs_ff);
+
+        % every monomial in hashtable is associated with its divmask
+        % to perform divisions faster. Filling those
+        hashtable_fill_divmask(basis_ht);
+        
+        % sort input, smaller leading terms first
+        sorting_sort_gens_by_lead_increasing2(basis, basis_ht, coeffs_qq);
+
+        return basis . basis_ht
+    end;
+
+% Initializes Basis and MonomialHashtable structures,
+% fills input data from exponents and coeffs
+%
+% MonomialHashtable initial size is set to tablesize
+asserted procedure f4_initialize_structures_ff(ring: PolyRing, exponents: Vector, 
+                                            coeffs: Vector, tablesize: Integer);
+    begin scalar coeffs_ff;
+        coeffs_ff := dv_undef(dv_length(coeffs));
+        for i := 1:dv_length(coeffs_ff) do
+            putv(coeffs_ff, i, dv_undef(dv_length(coeffs[i])));
+        return f4_initialize_structures_no_normalize(ring, exponents, coeffs, coeffs_ff, tablesize)
     end;
 
 %--------------------------------------------------------------------------------------------------

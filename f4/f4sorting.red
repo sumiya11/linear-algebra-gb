@@ -91,28 +91,34 @@ asserted procedure sorting_sort_gens_by_lead_increasing(basis: Basis, ht: Monomi
         coeffs := basis_bget_coeffs(basis);
         exps := hashtable_htget_exponents(ht);
 
-        if f4_debug() then <<
-            prin2t {"sort_gens_by_lead_increasing: input"};
-            prin2t gens;
-            prin2t exps;
-            prin2t basis_bget_ntotal(basis)
-        >>;
-
         inds := for i := 1:basis_bget_ntotal(basis) collect 
             {getv(exps, getv(getv(gens, i), 1)), getv(gens, i), getv(coeffs, i)};
 
-        if f4_debug() then
-            prin2t {"sort_gens_by_lead_increasing: before", inds};
-
         inds := sort(inds, 'sorting_comparator_sort_gens_by_lead_increasing);
-        
-        if f4_debug() then
-            prin2t {"sort_gens_by_lead_increasing: after", inds};
 
         for i := 1:basis_bget_ntotal(basis) do <<
             x := pop(inds);
             putv(gens, i, cadr x);
             putv(coeffs, i, caddr x)
+        >>
+    end;
+
+asserted procedure sorting_sort_gens_by_lead_increasing2(basis: Basis, ht: MonomialHashtable, coeffs_zz: Vector);
+    begin scalar gens, exps, inds, coeffs, x;
+        gens := basis_bget_gens(basis);
+        coeffs := basis_bget_coeffs(basis);
+        exps := hashtable_htget_exponents(ht);
+
+        inds := for i := 1:basis_bget_ntotal(basis) collect 
+            {getv(exps, getv(getv(gens, i), 1)), getv(gens, i), getv(coeffs, i), getv(coeffs_zz, i)};
+
+        inds := sort(inds, 'sorting_comparator_sort_gens_by_lead_increasing);
+
+        for i := 1:basis_bget_ntotal(basis) do <<
+            x := pop(inds);
+            putv(gens, i, cadr x);
+            putv(coeffs, i, caddr x);
+            putv(coeffs_zz, i, cadddr x)
         >>
     end;
 

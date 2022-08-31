@@ -51,7 +51,7 @@ module f4;
 % . internaltypes - type declarations (have no practical effect in Reduce, 
 %                   but are left for consistency with Julia implementation)
 % . io - input-output conversions of polynomial representations
-create!-package('(f4 f4_groebner f4f4 f4hashtable f4basis f4matrix f4sorting f4io f4poly f4dv), nil);
+create!-package('(f4 f4groebner f4f4 f4hashtable f4basis f4matrix f4sorting f4io f4poly f4dv f4lucky f4coeffs f4correctness f4modular), nil);
 
 loadtime load!-package 'vector88;
 compiletime load!-package 'vector88;
@@ -60,11 +60,11 @@ load!-package 'rltools;
 
 % Assertions should be OFF in production.
 load!-package 'assert;
-off1 'assert;
-off1 'assert_procedures;
-off1 'assert_inline_procedures;
-off1 'assertinstall;
-off1 'evalassert;
+on1 'assert;
+on1 'assert_procedures;
+on1 'assert_inline_procedures;
+on1 'assertinstall;
+on1 'evalassert;
 
 % from f5io.red
 struct PolyRing;
@@ -112,6 +112,7 @@ struct ColumnIdx; % = Int32
 struct PrimeTracker;
 
 struct CoeffAccum;
+
 fluid '(coeff_plus!* coeff_times!*);
 
 procedure coeff_modular(flag);
@@ -212,7 +213,7 @@ asserted procedure f4_groebner(u: List): List;
         {ring, exps, coeffs} := io_convert_to_internal(polynomials, vars, ord);
 
         % run under error catch to recover the order in case of error 
-        w := errorset({'groebner_groebner, mkquote ring, mkquote exps, mkquote coeffs}, t, !*backtrace);
+        w := errorset({'groebner_groebner2, mkquote ring, mkquote exps, mkquote coeffs}, t, !*backtrace);
         
         if errorp w then
             return nil;

@@ -17,12 +17,13 @@ module f4io;
 %   explen - length of exponent vectors
 %   ord - sort mode
 
-asserted procedure io_PolyRing(nvars: Integer, explen: Integer, ord): PolyRing;
+asserted procedure io_PolyRing(nvars: Integer, explen: Integer, ord, ch: Integer): PolyRing;
     begin scalar v;
-        v := dv_undef(3);
+        v := dv_undef(4);
         putv(v, 1, nvars);
         putv(v, 2, explen);
         putv(v, 3, ord);
+        putv(v, 4, ch);
         return v
     end;
 
@@ -35,6 +36,9 @@ asserted procedure io_prget_explen(pr: PolyRing): Integer;
 asserted procedure io_prget_ord(pr: PolyRing);
     getv(pr, 3);
 
+asserted procedure io_prget_ch(pr: PolyRing): Integer;
+    getv(pr, 4);
+
 asserted procedure io_prset_nvars(pr: PolyRing, x);
     putv(pr, 1, x);
 
@@ -43,6 +47,9 @@ asserted procedure io_prset_explen(pr: PolyRing, x);
 
 asserted procedure io_prset_ord(pr: PolyRing, x);
     putv(pr, 3, x);
+
+asserted procedure io_prset_ch(pr: PolyRing, x): Integer;
+    putv(pr, 4, x);
 
 %--------------------------------------------------------------------------------------------------
 
@@ -59,7 +66,7 @@ asserted procedure io_convert_to_internal(polys: List, vars: List, ord: Any): Li
         n := length(polys);
         gens := dv_undef(n);
         coeffs := dv_undef(n);
-        ring := io_PolyRing(length(vars), length(vars) + 1, ord);
+        ring := io_PolyRing(length(vars), length(vars) + 1, ord, 0);
         
         if f4_debug() then
             prin2t {"convert_to_internal: ring:", ring};

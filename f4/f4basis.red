@@ -197,7 +197,7 @@ asserted procedure basis_initialize_basis(ring: PolyRing, ngens: Integer): Basis
 asserted procedure basis_copy_basis_thorough(basis: Basis): Basis;
     begin scalar sz, gens, coeffs, bgens, bcoeffs, gensi, coeffsi,
                     isred, nonred, lead;
-        sz := hashtable_htget_size(basis);
+        sz := basis_bget_size(basis);
 
         gens := dv_undef(sz);
         coeffs := dv_undef(sz);
@@ -215,10 +215,10 @@ asserted procedure basis_copy_basis_thorough(basis: Basis): Basis;
                 putv(coeffsi, j, getv(getv(bcoeffs, i), j))
             >>
         >>;
-        isred := copy(basis_bget_isred(basis));
-        nonred := copy(basis_bget_nonred(basis));
-        lead := copy(basis_bget_lead(basis));
-        return basis_Basis(gens, coeffs, hashtable_htget_size(basis), basis_bget_ndone(basis),
+        isred := dv_copy(basis_bget_isred(basis));
+        nonred := dv_copy(basis_bget_nonred(basis));
+        lead := dv_copy(basis_bget_lead(basis));
+        return basis_Basis(gens, coeffs, basis_bget_size(basis), basis_bget_ndone(basis),
                         basis_bget_ntotal(basis), isred, nonred, lead, basis_bget_nlead(basis))
     end;
 
@@ -243,6 +243,12 @@ asserted procedure basis_check_enlarge_basis(basis: Basis, added: Integer);
 % Normalize each element of the input basis
 % by dividing it by leading coefficient
 asserted procedure basis_normalize_basis(ring: PolyRing, basis: Basis): Basis;
+    if io_prget_ch(ring) = 0 then
+        basis_normalize_basis_qq(ring, basis)
+    else
+        basis_normalize_basis_ff(ring, basis);
+
+asserted procedure basis_normalize_basis_qq(ring: PolyRing, basis: Basis): Basis;
     begin scalar cfs, mul, cfsi;
         cfs := basis_bget_coeffs(basis);
         for i := 1:basis_bget_ntotal(basis) do <<
@@ -252,6 +258,22 @@ asserted procedure basis_normalize_basis(ring: PolyRing, basis: Basis): Basis;
                 for j := 2:dv_length(cfsi) do
                     putv(cfsi, j, multsq(getv(cfsi, j), mul));
                 putv(cfsi, 1, 1 ./ 1)
+            >>
+        >>;
+        return basis
+    end;
+
+asserted procedure basis_normalize_basis_ff(ring: PolyRing, basis: Basis): Basis;
+    begin scalar cfs, mul, cfsi;
+        cfs := basis_bget_coeffs(basis);
+        for i := 1:basis_bget_ntotal(basis) do <<
+            if not (null getv(cfs, i)) then <<
+                cfsi := getv(cfs, i);
+                ch := io_prget_ch(ring);
+                mul := remainder(modular_invmod(getv(cfsi, 1), ch), ch);
+                for j := 2:dv_length(cfsi) do
+                    putv(cfsi, j, remainder(getv(cfsi, j) #* mul, ch));
+                putv(cfsi, 1, 1)
             >>
         >>;
         return basis

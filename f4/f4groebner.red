@@ -11,13 +11,19 @@ asserted procedure groebner_select_tablesize(ring: PolyRing, exps: Vector): Inte
         return 2^14  % 2^10 - 2^16 in Julia
     end;
 
+asserted procedure groebner_cleanup_gens(ring, gens_ff, prime);
+    <<
+        io_prset_ch(ring, prime);
+        basis_normalize_basis(ring, gens_ff)
+    >>;
+
 %--------------------------------------------------------------------------------------------------
 
 % Computes the Groebner basis.
 %   . ring - a polynomial ring 
 %   . exps - a list of polynomials' terms (not hashed)
 %   . coeffs - a list of polynomials' coefficients
-asserted procedure groebner_groebner(ring: PolyRing, exps: Vector, coeffs: Vector): DottedPair;
+asserted procedure groebner_groebner1(ring: PolyRing, exps: Vector, coeffs: Vector): DottedPair;
     begin scalar tablesize, basis, ht, gbexps;
         
         % select hashtable size
@@ -33,13 +39,14 @@ asserted procedure groebner_groebner(ring: PolyRing, exps: Vector, coeffs: Vecto
     end;
 
 asserted procedure groebner_groebner2(ring: PolyRing, exps: Vector, coeffs: Vector): DottedPair;
-    begin scalar;
+    begin scalar tablesize, gens_temp_ff, ht, coeffaccum,
+                coeffs_zz, primetracker, i, gens_ff, prime;
         
         % select hashtable size
         tablesize := groebner_select_tablesize(ring, exps);
 
         gens_temp_ff . ht := f4_initialize_structures_ff(ring, exps, coeffs, tablesize);
-        gens_ff := copy_basis_thorough(gens_temp_ff);
+        gens_ff := basis_copy_basis_thorough(gens_temp_ff);
 
         % now hashtable is filled correctly,
         % and gens_temp_ff exponents are correct and in correct order.
@@ -48,10 +55,9 @@ asserted procedure groebner_groebner2(ring: PolyRing, exps: Vector, coeffs: Vect
 
         % to store integer and rational coefficients of groebner basis
         coeffaccum := coeffs_CoeffAccum();
-        % mutating?
 
         % scale coefficients of input to integers
-        coeffs_zz := scale_denominators(coeffs);
+        coeffs_zz := coeffs_scale_denominators(coeffs);
 
         % keeps track of used prime numbers
         primetracker := lucky_PrimeTracker(coeffs_zz);
@@ -59,7 +65,7 @@ asserted procedure groebner_groebner2(ring: PolyRing, exps: Vector, coeffs: Vect
         i := 1;
 
         % copy basis so that we initial exponents dont get lost
-        gens_ff := copy_basis_thorough(gens_temp_ff);
+        gens_ff := basis_copy_basis_thorough(gens_temp_ff);
 
         prime := lucky_nextluckyprime(primetracker);
 
@@ -67,14 +73,18 @@ asserted procedure groebner_groebner2(ring: PolyRing, exps: Vector, coeffs: Vect
         coeffs_reduce_modulo(coeffs_zz, basis_bget_coeffs(gens_ff), prime);
 
         % do some things to ensure generators are correct
+        % Julia: normalize, somehow
         groebner_cleanup_gens(ring, gens_ff, prime);
 
+        % compute groebner basis in finite field
+        % ring.ch will be nonzero !!!
+        f4_f4(ring, gens_ff, ht, t);
 
-        f4(ring, gens_ff, ht);
+        % reconstruct into integers
+        coeffs_reconstruct_crt(coeffaccum, primetracker, basis_bget_coeffs(gens_ff), prime);
 
-        modular_reconstruct_crt(coeffaccum, primetracker, basis_bget_coeffs(gens_ff), prime);
-
-        modular_reconstruct_modulo(coeffaccum, primetracker);
+        % reconstruct into rationals
+        coeffs_reconstruct_modulo(coeffaccum, primetracker);
 
         if correctness_correctness_check(coeffaccum, primetracker, ring, exps, coeffs, coeffs_zz, gens_temp_ff, gens_ff, ht) then
             correct := t;
@@ -101,11 +111,13 @@ asserted procedure groebner_groebner2(ring: PolyRing, exps: Vector, coeffs: Vect
                 % do some things to ensure generators are correct
                 groebner_cleanup_gens(ring, gens_ff, prime);
 
-                f4(ring, gens_ff, ht);
+                %  compute groebner basis in finite field
+                f4(ring, gens_ff, ht, t);
 
                 modular_reconstruct_crt(coeffaccum, primetracker, basis_bget_coeffs(gens_ff), prime)
             >>;
             
+            % reconstruct into rationals
             modular_reconstruct_modulo(coeffaccum, primetracker);
 
             if correctness_correctness_check(coeffaccum, primetracker, ring, exps, coeffs, coeffs_zz, gens_temp_ff, gens_ff, ht) then

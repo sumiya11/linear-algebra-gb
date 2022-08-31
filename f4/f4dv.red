@@ -22,13 +22,25 @@ asserted procedure dv_undef(n: Integer): DynamicVector;
 asserted procedure dv_length(v: DynamicVector): Integer;
     upbv(v);
 
+%
+asserted procedure dv_isempty(v: DynamicVector): Boolean;
+    dv_length(v) = 0;
+
 % Vector of size n filled with zeros
 asserted procedure dv_zeros(n): DynamicVector;
     begin scalar v;
         v := dv_undef(n);
         for i := 1:n do
-            % v[i] := 0;
             putv(v, i, 0);
+        return v
+    end;
+
+% Vector of size n filled with zeros
+asserted procedure dv_zeros_sq(n): DynamicVector;
+    begin scalar v;
+        v := dv_undef(n);
+        for i := 1:n do
+            putv(v, i, nil ./ 1);
         return v
     end;
 
