@@ -1,21 +1,15 @@
 module f4lucky;
 % Lucky prime numbers.
 
-% Lucky primes are prime numbers used for modular computation.
-% The sequence of lucky primes starts with FIRST_LUCKY_PRIME!*
-fluid '(FIRST_LUCKY_PRIME!*);
-FIRST_LUCKY_PRIME!* := 2^21+17;
-
-% Good primes are prime numbers used for checking correctness.
-% The sequence of good primes starts with FIRST_GOOD_PRIME!*
-fluid '(FIRST_GOOD_PRIME!*);
-FIRST_GOOD_PRIME!* := 2^20+7;
-
-% There are TODO primes between
-% FIRST_LUCKY_PRIME and FIRST_GOOD_PRIME
+fluid '(f4_largest!-small!-prime!*
+        f4_largest!-small!-modulus!*);
 
 asserted procedure lucky_PrimeTracker(coeffs: Vector): PrimeTracker;
-    lucky_PrimeTracker1(coeffs, FIRST_LUCKY_PRIME!*, FIRST_GOOD_PRIME!*, dv_undef(0), 1);
+    begin scalar firstprime;
+        firstprime := isqrt(f4_largest!-small!-modulus!*) / 2;
+        firstprime := nextprime(firstprime);
+        return lucky_PrimeTracker1(coeffs, firstprime, nextprime(firstprime / 2), dv_undef(0), 1)
+    end;
 
 asserted procedure lucky_PrimeTracker1(coeffs: Vector, luckyprime: Integer, goodprime: Integer, primes: Vector, modulo: Integer): PrimeTracker;
     begin scalar v;
@@ -78,7 +72,7 @@ asserted procedure lucky_isluckyprime(tracker: PrimeTracker, prime: Integer): Bo
     end;
 
 asserted procedure lucky_nextluckyprime(tracker: PrimeTracker): Integer;
-    begin scalar p, coeffs, poly, c, result, newsz;
+    begin scalar newsz, prime;
         prime := lucky_ptget_luckyprime(tracker);
 
         while not lucky_isluckyprime(tracker, prime) do
@@ -100,7 +94,7 @@ asserted procedure lucky_updatemodulo(tracker: PrimeTracker);
     lucky_ptset_modulo(tracker, lucky_ptget_modulo(tracker)*f4_getvlast(lucky_ptget_primes(tracker)));
 
 asserted procedure lucky_nextgoodprime(tracker: PrimeTracker): Integer;
-    begin scalar p, coeffs, poly, c, result, newsz;
+    begin scalar newsz, prime;
         prime := lucky_ptget_luckyprime(tracker);
 
         while not lucky_isluckyprime(tracker, prime) do

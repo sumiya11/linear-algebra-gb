@@ -6,7 +6,7 @@ REDUCE = r"bootstrapreduce"
 ARG1 = '~/f4/linear-algebra-gb/f4/test/{0}.red'
 ARG2 = '-w ~/f4/linear-algebra-gb/f4/test/output.rlg'
 
-KEYWORDS = ['Wrong Answer']
+KEYWORDS = ['Wrong Answer', '*****', 'Error']
 
 class Report:
     def __init__(self, msg, ok):

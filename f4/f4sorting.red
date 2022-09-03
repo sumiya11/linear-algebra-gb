@@ -300,17 +300,17 @@ asserted procedure sorting_sort_pairset_by_lcm(pairset: Pairset, npairs: Integer
         ps := basis_psget_pairs(pairset);
         exps := hashtable_htget_exponents(ht);
 
-        if f4_debug() then
+        if !*f4debug then
             prin2t {"sort_pairset_by_lcm:", ps, ", npairs:", npairs};
 
         part := for i := 1:npairs collect {getv(ps, i), getv(exps, basis_spget_lcmj(getv(ps, i)))};
 
-        if f4_debug() then
+        if !*f4debug then
             prin2t {"sort_pairset_by_lcm: before", part};
 
         part := sort(part, 'sorting_comparator_sort_pairset_by_lcm_drl);
         
-        if f4_debug() then
+        if !*f4debug then
             prin2t {"sort_pairset_by_lcm: after", part};
 
         for i := 1:npairs do
@@ -325,12 +325,12 @@ asserted procedure sorting_sort_generators_by_position(gens: Vector, loadj: Inte
     begin scalar part;
         part := for i := 1:loadj collect getv(gens, i);
 
-        if f4_debug() then
+        if !*f4debug then
             prin2t {"sort_generators_by_position: before sort: ", part, loadj};
 
         part := sort(part, '<);
 
-        if f4_debug() then
+        if !*f4debug then
             prin2t {"sort_generators_by_position: after sort: ", part, loadj};
 
         for i := 1:loadj do

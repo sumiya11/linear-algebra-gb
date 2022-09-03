@@ -9,7 +9,7 @@ asserted procedure f4_reduction(ring: PolyRing, basis: Basis, matrixj: MacaulayM
     <<
         matrix_convert_hashes_to_columns(matrixj, symbol_ht);
 
-        if f4_debug() then <<
+        if !*f4debug then <<
             prin2t {"f4_reduction: after convert hashes to cols: matrix", matrixj}; 
             prin2t {"f4_reduction: after convert hashes to cols: symbol_ht", symbol_ht}
         >>;
@@ -17,13 +17,13 @@ asserted procedure f4_reduction(ring: PolyRing, basis: Basis, matrixj: MacaulayM
         sorting_sort_matrix_rows_decreasing(matrixj); % for pivots,  AB part
         sorting_sort_matrix_rows_increasing(matrixj); % for reduced, CD part
 
-        if f4_debug() then <<
+        if !*f4debug then <<
             prin2t {"f4_reduction: after sorting", matrixj}
         >>;
 
         matrix_linear_algebra(ring, matrixj, basis);
 
-        if f4_debug() then <<
+        if !*f4debug then <<
             prin2t {"f4_reduction: after linear algebra", matrixj}
         >>;
 
@@ -271,7 +271,7 @@ asserted procedure f4_symbolic_preprocessing(basis: Basis, matrixj: MacaulayMatr
             matrix_mset_up2coef(matrixj, dv_resize(matrix_mget_up2coef(matrixj), matrix_mget_size(matrixj)))
         >>;
 
-        if f4_debug() then <<
+        if !*f4debug then <<
             prin2t {"f4_symbolic_preprocessing: ONE: symbol_ht", symbol_ht};
             prin2t {"f4_symbolic_preprocessing: ONE: matrixj", matrixj};
         >>;
@@ -290,7 +290,7 @@ asserted procedure f4_symbolic_preprocessing(basis: Basis, matrixj: MacaulayMatr
             i := i + 1
         >>;
 
-        if f4_debug() then <<
+        if !*f4debug then <<
             prin2t {"f4_symbolic_preprocessing: TWO: symbol_ht", symbol_ht};
             prin2t {"f4_symbolic_preprocessing: TWO: matrixj", matrixj};
         >>;
@@ -345,7 +345,7 @@ asserted procedure f4_select_normal(pairset: Pairset, basis: Basis, matrixj: Mac
         % number of selected pairs
         npairs := min_idx;
 
-        if f4_debug() then
+        if !*f4debug then
             prin2t {"f4_select_normal: Selected", npairs, "pairs"};
 
         sorting_sort_pairset_by_lcm(pairset, npairs, ht);
@@ -368,7 +368,7 @@ asserted procedure f4_select_normal(pairset: Pairset, basis: Basis, matrixj: Mac
 
         symdata := hashtable_htget_hashdata(symbol_ht);
 
-        if f4_debug() then <<
+        if !*f4debug then <<
             prin2t {"f4_select_normal: matrix", matrixj};
             prin2t {"f4_select_normal: symbol_ht", symbol_ht}
         >>;
@@ -377,7 +377,7 @@ asserted procedure f4_select_normal(pairset: Pairset, basis: Basis, matrixj: Mac
         i := 1;
         while i <= npairs do <<
             
-            if f4_debug() then
+            if !*f4debug then
                 prin2t {"f4_select_normal: adding ", npairs, "times 2 S-polys"};
 
             matrix_mset_ncols(matrixj, matrix_mget_ncols(matrixj) + 1);
@@ -398,7 +398,7 @@ asserted procedure f4_select_normal(pairset: Pairset, basis: Basis, matrixj: Mac
             % sort by number in the basis (by=identity)
             sorting_sort_generators_by_position(gens, loadj);
 
-            if f4_debug() then
+            if !*f4debug then
                 prin2t {"f4_select_normal: after sorting S-polys", gens, loadj};
 
             % now we collect reducers, and reduced
@@ -440,7 +440,7 @@ asserted procedure f4_select_normal(pairset: Pairset, basis: Basis, matrixj: Mac
             % increase number of rows set
             matrix_mset_nrows(matrixj, matrix_mget_nrows(matrixj) + 1);
 
-            if f4_debug() then <<
+            if !*f4debug then <<
                 prin2t {"f4_select_normal: matrix after whatever", matrixj};
                 prin2t {"f4_select_normal: symbol_ht after whatever", symbol_ht};
             >>;
@@ -489,6 +489,181 @@ asserted procedure f4_select_normal(pairset: Pairset, basis: Basis, matrixj: Mac
 
 %--------------------------------------------------------------------------------------------------
 
+asserted procedure f4_select_isgroebner(pairset: Pairset, basis: Basis, matrixj: MacaulayMatrix, 
+                                ht: MonomialHashtable, symbol_ht: MonomialHashtable);
+    begin scalar ps, min_idx, npairs, uprows, up2coef, lowrows,
+                    gens, htexps, htdata, etmp, i, symdata,
+                    loadj, lcmj, j, bgens, prev, poly, vidx, eidx, elcm,
+                    htmp, min_deg, explen, low2coef;
+        
+        % sorting_sort_pairset_by_degree(pairset, 1, basis_psget_load(pairset) - 1);
+
+        ps := basis_psget_pairs(pairset);
+        npairs := basis_psget_load(pairset);
+
+        sorting_sort_pairset_by_lcm(pairset, npairs, ht);
+
+        matrix_reinitialize_matrix(matrixj, npairs);
+
+        % polynomials from pairs in order (p11, p12)(p21, p21)
+        % (future rows of the matrixj)
+        gens := dv_undef(2 * npairs);
+        
+        htexps := hashtable_htget_exponents(ht);
+        htdata := hashtable_htget_hashdata(ht);
+
+        explen := hashtable_htget_explen(ht);
+
+        symdata := hashtable_htget_hashdata(symbol_ht);
+
+        if !*f4debug then <<
+            prin2t {"f4_select_normal: matrix", matrixj};
+            prin2t {"f4_select_normal: symbol_ht", symbol_ht}
+        >>;
+
+        etmp := getv(hashtable_htget_exponents(ht), 1);
+        i := 1;
+        while i <= npairs do <<
+            
+            if !*f4debug then
+                prin2t {"f4_select_normal: adding ", npairs, "times 2 S-polys"};
+
+            matrix_mset_ncols(matrixj, matrix_mget_ncols(matrixj) + 1);
+            loadj := 1;
+            lcmj := basis_spget_lcmj(getv(ps, i));
+            j := i;
+
+            % we collect all generators with same lcm into gens
+            while j <= npairs and basis_spget_lcmj(getv(ps, j)) = lcmj do <<
+                putv(gens, loadj, basis_spget_poly1(getv(ps, j)));
+                loadj := loadj + 1;
+                putv(gens, loadj, basis_spget_poly2(getv(ps, j)));
+                loadj := loadj + 1;
+                j := j + 1
+            >>;
+            loadj := loadj - 1;
+
+            % sort by number in the basis (by=identity)
+            sorting_sort_generators_by_position(gens, loadj);
+
+            if !*f4debug then
+                prin2t {"f4_select_normal: after sorting S-polys", gens, loadj};
+
+            % now we collect reducers, and reduced
+
+            % Julia: basis.gens
+            bgens := basis_bget_gens(basis);
+
+            % first generator index in groebner basis
+            prev := getv(gens, 1);
+            % first generator in hash table
+            poly := getv(bgens, prev);
+            % first generator lead monomial index in hash data
+            vidx := getv(poly, 1);
+
+            % first generator exponent
+            eidx := getv(hashtable_htget_exponents(ht), vidx);
+            % exponent of lcm corresponding to first generator
+            elcm := getv(hashtable_htget_exponents(ht), lcmj);
+            for u := 1:explen do
+                putv(etmp, u, getv(elcm, u) - getv(eidx, u));
+            % now etmp contents complement to eidx in elcm
+
+            % hash of complement
+            htmp := hashtable_hvget_hash(getv(hashtable_htget_hashdata(ht), lcmj)) - hashtable_hvget_hash(getv(hashtable_htget_hashdata(ht), vidx));
+
+            % add row as a reducer
+            matrix_mset_nup(matrixj, matrix_mget_nup(matrixj) + 1);
+
+            putv(matrix_mget_uprows(matrixj), matrix_mget_nup(matrixj), hashtable_multiplied_poly_to_matrix_row(symbol_ht, ht, htmp, etmp, poly));
+
+            symdata := hashtable_htget_hashdata(symbol_ht);
+
+            % map upper row to index in basis
+            putv(matrix_mget_up2coef(matrixj), matrix_mget_nup(matrixj), prev);
+
+            %  mark lcm column as reducer in symbolic hashtable
+            hashtable_hvset_idx(getv(hashtable_htget_hashdata(symbol_ht), getv(getv(matrix_mget_uprows(matrixj), matrix_mget_nup(matrixj)), 1)), 2);
+            
+            % increase number of rows set
+            matrix_mset_nrows(matrixj, matrix_mget_nrows(matrixj) + 1);
+
+            if !*f4debug then <<
+                prin2t {"f4_select_normal: matrix after whatever", matrixj};
+                prin2t {"f4_select_normal: symbol_ht after whatever", symbol_ht};
+            >>;
+
+            % over all polys with same lcm,
+            % add them to the lower part of matrixj
+            for k := 1:loadj do <<
+                % duplicate generator,
+                % we can do so as long as generators are sorted
+                if getv(gens, k) neq prev then <<
+                    % if the table was reallocated
+                    elcm := getv(hashtable_htget_exponents(ht), lcmj);
+
+                    prev := getv(gens, k);
+                    poly := getv(bgens, prev);
+                    vidx := getv(poly, 1);
+                    %  leading monom idx
+                    eidx := getv(hashtable_htget_exponents(ht), vidx);
+                    for u := 1:explen do
+                        putv(etmp, u, getv(elcm, u) - getv(eidx, u));
+                    
+                    htmp := hashtable_hvget_hash(getv(hashtable_htget_hashdata(ht), lcmj)) - hashtable_hvget_hash(getv(hashtable_htget_hashdata(ht), vidx));
+
+                    %  add row to be reduced
+                    matrix_mset_nlow(matrixj, matrix_mget_nlow(matrixj) + 1);
+                    putv(matrix_mget_lowrows(matrixj), matrix_mget_nlow(matrixj), hashtable_multiplied_poly_to_matrix_row(symbol_ht, ht, htmp, etmp, poly));
+                    % map lower row to index in basis
+                    putv(matrix_mget_low2coef(matrixj), matrix_mget_nlow(matrixj), prev);
+
+                    hashtable_hvset_idx(getv(hashtable_htget_hashdata(symbol_ht), getv(getv(matrix_mget_lowrows(matrixj), matrix_mget_nlow(matrixj)), 1)), 2);
+
+                    matrix_mset_nrows(matrixj, matrix_mget_nrows(matrixj) + 1)
+                >>
+            >>;
+
+            i := j
+        >>;
+
+        matrix_mset_lowrows(matrixj, dv_resize(matrix_mget_lowrows(matrixj), matrix_mget_nrows(matrixj) - matrix_mget_ncols(matrixj)))
+
+        % remove selected parirs from pairset
+        % for i := 1:basis_psget_load(pairset) - npairs do
+        %     putv(ps, i, getv(ps, i + npairs));
+        % basis_psset_load(pairset, basis_psget_load(pairset) - npairs)
+    end;
+
+asserted procedure f4_select_tobereduced(basis: Basis, tobereduced: Basis, matrixj: MacaulayMatrix, symbol_ht: MonomialHashtable, ht: MonomialHashtable);
+    begin scalar etmp, gen, h;
+        
+        % prepare to load all elems from tobereduced
+        % into low rows
+        matrix_reinitialize_matrix(matrixj, max(basis_bget_ntotal(basis), basis_bget_ntotal(tobereduced)));
+        matrix_mset_lowrows(matrixj, dv_resize(matrix_mget_lowrows(matrixj), basis_bget_ntotal(tobereduced)));
+
+        etmp := dv_zeros(hashtable_htget_explen(ht));
+
+        for i := 1:basis_bget_ntotal(tobereduced) do <<
+            matrix_mset_nrows(matrixj, matrix_mget_nrows(matrixj) + 1);
+            gen := getv(basis_bget_gens(tobereduced), i);
+            h := 0;
+            putv(matrix_mget_lowrows(matrixj), matrix_mget_nrows(matrixj), hashtable_multiplied_poly_to_matrix_row(symbol_ht, ht, h, etmp, gen));
+            putv(matrix_mget_low2coef(matrixj), matrix_mget_nrows(matrixj), i)
+        >>;
+
+        basis_bset_nlead(basis, basis_bget_ntotal(basis));
+        basis_bset_ndone(basis, basis_bget_ntotal(basis));
+        basis_bset_isred(basis, dv_zeros(dv_length(basis_bget_isred(basis))));
+        for i := 1:basis_bget_nlead(basis) do <<
+            putv(basis_bget_nonred(basis), i, i);
+            putv(basis_bget_lead(basis), i, hashtable_hvget_divmask(getv(hashtable_htget_hashdata(ht), getv(getv(basis_bget_gens(basis), i), 1))))
+        >>
+    end;
+
+%--------------------------------------------------------------------------------------------------
+
 % Computes the Groebner basis inplace in `basis`
 %
 % Input ivariants:
@@ -515,7 +690,7 @@ asserted procedure f4_f4(ring: PolyRing, basis: Basis, ht: MonomialHashtable, re
 
         ASSERT(basis_bget_ndone(basis) = 0);
 
-        if f4_debug() then <<
+        if !*f4debug then <<
             prin2t "f4: Input";
             prin2t {"Ring: ", ring};
             prin2t {"Basis: ", basis};
@@ -533,7 +708,7 @@ asserted procedure f4_f4(ring: PolyRing, basis: Basis, ht: MonomialHashtable, re
         update_ht := hashtable_initialize_secondary_hash_table(ht);
         symbol_ht := hashtable_initialize_secondary_hash_table(ht);
         
-        if f4_debug() then <<
+        if !*f4debug then <<
             prin2t "f4: After initialize";
             prin2t {"Pairset: ", pairset};
             prin2t {"Matrix: ", matrixj};
@@ -543,7 +718,7 @@ asserted procedure f4_f4(ring: PolyRing, basis: Basis, ht: MonomialHashtable, re
         plcm := dv_undef(0);
         plcm := basis_update(pairset, basis, ht, update_ht, plcm);
         
-        if f4_debug() then <<
+        if !*f4debug then <<
             prin2t "After first update";
             prin2t {"Pairset: ", pairset};
             prin2t {"Basis: ", basis};
@@ -555,7 +730,7 @@ asserted procedure f4_f4(ring: PolyRing, basis: Basis, ht: MonomialHashtable, re
         d := 0;
         while basis_psget_load(pairset) neq 0 do <<
             d := d + 1;
-            if f4_debug() then <<
+            if !*f4debug then <<
                 prin2t {"f4: iteration: ", d};
                 prin2t {"f4: available pairs:", basis_psget_load(pairset)}
             >>;
@@ -565,7 +740,7 @@ asserted procedure f4_f4(ring: PolyRing, basis: Basis, ht: MonomialHashtable, re
             % and puts these into the matrixj rows
             f4_select_normal(pairset, basis, matrixj, ht, symbol_ht);
 
-            if f4_debug() then <<
+            if !*f4debug then <<
                 prin2t {"f4: after select: ", pairset};
                 prin2t {"f4: matrix:", matrixj};
                 prin2t {"f4: symbol_ht:", symbol_ht}
@@ -573,7 +748,7 @@ asserted procedure f4_f4(ring: PolyRing, basis: Basis, ht: MonomialHashtable, re
 
             f4_symbolic_preprocessing(basis, matrixj, ht, symbol_ht);
 
-            if f4_debug() then <<
+            if !*f4debug then <<
                 prin2t {"f4: after symbolic matrix: ", matrixj};
                 prin2t {"f4: after symbolic symbol_ht: ", symbol_ht};
             >>;
@@ -581,7 +756,7 @@ asserted procedure f4_f4(ring: PolyRing, basis: Basis, ht: MonomialHashtable, re
             % reduces polys and obtains new potential basis elements
             f4_reduction(ring, basis, matrixj, ht, symbol_ht);
 
-            if f4_debug() then <<
+            if !*f4debug then <<
                 prin2t {"f4: after reduction, matrix: ", matrixj};
                 prin2t {"f4: after reduction, basis: ", basis}
             >>;
@@ -591,7 +766,7 @@ asserted procedure f4_f4(ring: PolyRing, basis: Basis, ht: MonomialHashtable, re
             % checks for redundancy
             plcm := basis_update(pairset, basis, ht, update_ht, plcm);
 
-            if f4_debug() then <<
+            if !*f4debug then <<
                 prin2t {"f4: after update: ", pairset};
                 prin2t {"f4: after update: ", basis}
             >>;
@@ -600,14 +775,14 @@ asserted procedure f4_f4(ring: PolyRing, basis: Basis, ht: MonomialHashtable, re
             symbol_ht := hashtable_initialize_secondary_hash_table(ht)
         >>;
 
-        if f4_debug() then <<
+        if !*f4debug then <<
             prin2t {"f4: after main loop: ", basis}
         >>;
 
         % remove redundant elements
         basis_filter_redundant(basis);
         
-        if f4_debug() then <<
+        if !*f4debug then <<
             prin2t {"f4: after filter redundant: ", basis}
         >>;
 
@@ -616,7 +791,7 @@ asserted procedure f4_f4(ring: PolyRing, basis: Basis, ht: MonomialHashtable, re
         
         basis_standardize_basis(ring, basis, ht, hashtable_htget_ord(ht));
 
-        if f4_debug() then <<
+        if !*f4debug then <<
             prin2t {"f4: after standardize: ", basis}
         >>;
 

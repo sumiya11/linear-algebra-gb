@@ -353,7 +353,7 @@ asserted procedure hashtable_reinitialize_hash_table(ht: MonomialHashtable, size
 % doubles the size of storage in `ht`,
 % and rehashes all elements
 asserted procedure hashtable_enlarge_hash_table(ht: MonomialHashtable);
-    begin scalar htsize, flag, modj, he, hidx, htdata, httable;
+    begin scalar htsize, flag, modj, he, hidx, htdata, httable, j;
         htsize := hashtable_htget_size(ht) * 2;
         hashtable_htset_size(ht, htsize);
         % 3 vectors of equal size inside ht: hashdata (add), exponents (add), hashtable (table)
@@ -396,7 +396,7 @@ asserted procedure hashtable_insert_in_hash_table(ht: MonomialHashtable, e: Expo
         % generate hash
         he := 0;
         
-        if f4_debug() then
+        if !*f4debug then
             prin2t "insert_in_hash_table..";
 
         hasher := hashtable_htget_hasher(ht);
@@ -404,7 +404,7 @@ asserted procedure hashtable_insert_in_hash_table(ht: MonomialHashtable, e: Expo
         for i := 1:htexplen do
             he := he + getv(hasher, i)*getv(e, i);
         
-        if f4_debug() and nil then <<
+        if !*f4debug and nil then <<
             prin2t {"insert_in_hash_table: Hash computed: ", he};
             prin2t {"insert_in_hash_table: ht:", ht}
         >>;
@@ -427,7 +427,7 @@ asserted procedure hashtable_insert_in_hash_table(ht: MonomialHashtable, e: Expo
             hidx := hashtable_hashnextindex(he, i, modj);
             vidx := getv(httable, hidx);
 
-            if f4_debug() and nil then
+            if !*f4debug and nil then
                 prin2t {"insert_in_hash_table: hidx: ", hidx, ", vidx:", vidx};
 
             % if not free
@@ -457,7 +457,7 @@ asserted procedure hashtable_insert_in_hash_table(ht: MonomialHashtable, e: Expo
         vidx := hashtable_htget_load(ht) + 1;
         putv(httable, hidx, vidx);
 
-        if f4_debug() and nil then
+        if !*f4debug and nil then
             prin2t {"insert_in_hash_table: vidx: ", vidx};
 
         putv(htexps, vidx, dv_similar(e));
@@ -468,7 +468,7 @@ asserted procedure hashtable_insert_in_hash_table(ht: MonomialHashtable, e: Expo
         divmask := hashtable_generate_monomial_divmask(e, ht);
         putv(htdata, vidx, hashtable_Hashvalue(he, divmask, 0, f4_getvlast(e)));
 
-        if f4_debug() and nil then
+        if !*f4debug and nil then
             prin2t {"insert_in_hash_table: divmask: ", divmask};
 
         hashtable_htset_load(ht, hashtable_htget_load(ht) + 1);
@@ -511,7 +511,7 @@ asserted procedure hashtable_fill_divmask(ht: MonomialHashtable);
             >>
         >>;
 
-        if f4_debug() then <<
+        if !*f4debug then <<
             prin2t {"In fill_divmask"};
             prin2t {ndivbits, min_exp, max_exp}        
         >>;
@@ -668,7 +668,7 @@ asserted procedure hashtable_insert_multiplied_poly_in_hash_table(
         sdata := hashtable_htget_hashdata(symbol_ht);
         stable := hashtable_htget_hashtable(symbol_ht);
 
-        if f4_debug() then <<
+        if !*f4debug then <<
             prin2t {"INSERTING", poly, "MULTIPLIED BY", etmp, "TO SYM HASHTABLE:"};
             prin2t {"hash(etmp) = ", htmp};
             prin2t symbol_ht
@@ -691,7 +691,7 @@ asserted procedure hashtable_insert_multiplied_poly_in_hash_table(
 
             lastidx := hashtable_htget_load(symbol_ht) + 1;
 
-            if f4_debug() then <<
+            if !*f4debug then <<
                 prin2t {"MONOMIAL", e, "WITH HASH h = htmp + hash(e)"};
                 prin2t {"hash(e) = ", hashtable_hvget_hash(getv(bdata, getv(poly, l)))};
                 prin2t {"htmp = ", htmp, "; h = ", h}

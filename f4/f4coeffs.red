@@ -52,6 +52,8 @@ asserted procedure coeffs_scale_denominators1(coeffs_qq: Vector, coeffs_zz: Vect
             ASSERT(dv_length(coeffs_qq[i]) = dv_length(coeffs_zz[i]));
 
             den := coeffs_common_denominator(coeffs_qq[i]);
+            % prin2t {"uwuw", den};
+
             for j := 1:dv_length(coeffs_qq[i]) do <<
                 num := numr(coeffs_qq[i, j]);
                 buf := den / denr(coeffs_qq[i, j]);
@@ -120,7 +122,7 @@ asserted procedure coeffs_reconstruct_trivial_crt(coeffaccum: CoeffAccum, gb_coe
     end;
 
 asserted procedure coeffs_reconstruct_crt(coeffaccum: CoeffAccum, primetracker: PrimeTracker, gb_coeffs_ff, ch: Integer);
-    begin scalar buf, n1, n2, M, bigch, invm1, invm2, ca, cf;
+    begin scalar buf, n1, n2, M, bigch, invm1, invm2, ca, cf, gb_coeffs_zz, prev_gb_coeffs_zz;
         if dv_isempty(coeffs_caget_gb_coeffs_qq(coeffaccum)) then <<
             coeffs_resize_accum(coeffaccum, gb_coeffs_ff);
             coeffs_reconstruct_trivial_crt(coeffaccum, gb_coeffs_ff)
@@ -135,7 +137,7 @@ asserted procedure coeffs_reconstruct_crt(coeffaccum: CoeffAccum, primetracker: 
             
             bigch := ch;
             M := lucky_ptget_modulo(primetracker) * ch;
-            
+
             % Julia
             {buf, invm1, invm2} := modular_gcdext(lucky_ptget_modulo(primetracker), bigch);
 
@@ -155,7 +157,7 @@ asserted procedure coeffs_reconstruct_crt(coeffaccum: CoeffAccum, primetracker: 
 %--------------------------------------------------------------------------------------------------
 
 asserted procedure coeffs_reconstruct_modulo(coeffaccum: CoeffAccum, primetracker: PrimeTracker): Boolean;
-    begin scalar modulo, bnd, gb_coeffs_zz, gb_coeffs_qq, result, buf;
+    begin scalar success, modulo, bnd, gb_coeffs_zz, gb_coeffs_qq, result, buf, cz, cq;
 
         modulo := lucky_ptget_modulo(primetracker);
 

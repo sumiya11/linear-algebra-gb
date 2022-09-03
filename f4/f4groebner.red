@@ -39,8 +39,9 @@ asserted procedure groebner_groebner1(ring: PolyRing, exps: Vector, coeffs: Vect
     end;
 
 asserted procedure groebner_groebner2(ring: PolyRing, exps: Vector, coeffs: Vector): DottedPair;
-    begin scalar tablesize, gens_temp_ff, ht, coeffaccum,
-                coeffs_zz, primetracker, i, gens_ff, prime;
+    begin scalar tablesize, gens_temp_ff, ht, coeffaccum, correct,
+                coeffs_zz, primetracker, i, gens_ff, prime, gap,
+                primegaps, primemult, gb_exps;
         
         % select hashtable size
         tablesize := groebner_select_tablesize(ring, exps);
@@ -64,10 +65,14 @@ asserted procedure groebner_groebner2(ring: PolyRing, exps: Vector, coeffs: Vect
 
         i := 1;
 
+        % prin2t {"i = ", i};
+
         % copy basis so that we initial exponents dont get lost
         gens_ff := basis_copy_basis_thorough(gens_temp_ff);
 
         prime := lucky_nextluckyprime(primetracker);
+
+        % prin2t {"prime = ", prime};
 
         % perform reduction and store result in gens_ff
         coeffs_reduce_modulo(coeffs_zz, basis_bget_coeffs(gens_ff), prime);
@@ -102,8 +107,10 @@ asserted procedure groebner_groebner2(ring: PolyRing, exps: Vector, coeffs: Vect
 
             for j := 1:gap do <<
                 i := i + 1;
+                
+                prin2t {"i = ", i};
 
-                # copy basis so that initial exponents dont get lost
+                % copy basis so that initial exponents dont get lost
                 gens_ff := basis_copy_basis_thorough(gens_temp_ff);
                 prime := lucky_nextluckyprime(primetracker);
                 % perform reduction and store result in gens_ff
@@ -112,13 +119,13 @@ asserted procedure groebner_groebner2(ring: PolyRing, exps: Vector, coeffs: Vect
                 groebner_cleanup_gens(ring, gens_ff, prime);
 
                 %  compute groebner basis in finite field
-                f4(ring, gens_ff, ht, t);
+                f4_f4(ring, gens_ff, ht, t);
 
-                modular_reconstruct_crt(coeffaccum, primetracker, basis_bget_coeffs(gens_ff), prime)
+                coeffs_reconstruct_crt(coeffaccum, primetracker, basis_bget_coeffs(gens_ff), prime)
             >>;
             
             % reconstruct into rationals
-            modular_reconstruct_modulo(coeffaccum, primetracker);
+            coeffs_reconstruct_modulo(coeffaccum, primetracker);
 
             if correctness_correctness_check(coeffaccum, primetracker, ring, exps, coeffs, coeffs_zz, gens_temp_ff, gens_ff, ht) then
                 correct := t

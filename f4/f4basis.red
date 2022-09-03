@@ -264,7 +264,7 @@ asserted procedure basis_normalize_basis_qq(ring: PolyRing, basis: Basis): Basis
     end;
 
 asserted procedure basis_normalize_basis_ff(ring: PolyRing, basis: Basis): Basis;
-    begin scalar cfs, mul, cfsi;
+    begin scalar cfs, mul, cfsi, ch;
         cfs := basis_bget_coeffs(basis);
         for i := 1:basis_bget_ntotal(basis) do <<
             if not (null getv(cfs, i)) then <<
@@ -272,7 +272,7 @@ asserted procedure basis_normalize_basis_ff(ring: PolyRing, basis: Basis): Basis
                 ch := io_prget_ch(ring);
                 mul := remainder(modular_invmod(getv(cfsi, 1), ch), ch);
                 for j := 2:dv_length(cfsi) do
-                    putv(cfsi, j, remainder(getv(cfsi, j) #* mul, ch));
+                    putv(cfsi, j, iremainder(getv(cfsi, j) #* mul, ch));
                 putv(cfsi, 1, 1)
             >>
         >>;
@@ -572,7 +572,7 @@ asserted procedure basis_standardize_basis(ring: PolyRing, basis: Basis,
         basis_bset_nonred(basis, dv_resize(nonred, nlead));
         basis_bset_isred(basis, dv_resize(isred, nlead));
 
-        if f4_debug() then
+        if !*f4debug then
             prin2t {"In standardize, just before sort", basis};
 
         sorting_sort_gens_by_lead_increasing_in_standardize(basis, ht, ord);

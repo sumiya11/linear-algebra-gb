@@ -58,7 +58,7 @@ asserted procedure io_convert_to_internal(polys: List, vars: List, ord: Any): Li
     begin scalar n, gens, coeffs, ring, i, gensi, coeffsi, 
                     gensij, explen, gensij_list;
         
-        if f4_debug() then
+        if !*f4debug then
             prin2t "convert_to_internal..";
         
         vars := cdr vars;
@@ -68,7 +68,7 @@ asserted procedure io_convert_to_internal(polys: List, vars: List, ord: Any): Li
         coeffs := dv_undef(n);
         ring := io_PolyRing(length(vars), length(vars) + 1, ord, 0);
         
-        if f4_debug() then
+        if !*f4debug then
             prin2t {"convert_to_internal: ring:", ring};
 
         % Julia!!
@@ -83,7 +83,7 @@ asserted procedure io_convert_to_internal(polys: List, vars: List, ord: Any): Li
             gensi := poly_getTerms(poly);
             coeffsi := poly_getCoeffs(poly);
 
-            if f4_debug() then <<
+            if !*f4debug then <<
                 prin2t {"poly", i};
                 prin2t {gensi, coeffsi}
             >>;
@@ -113,7 +113,7 @@ asserted procedure io_convert_to_internal(polys: List, vars: List, ord: Any): Li
 asserted procedure io_convert_to_output(ring: PolyRing, bexps: Vector, bcoeffs: Vector): List;
     begin scalar anssq, bexpsi, bcoeffsi;
         
-        if f4_debug() then
+        if !*f4debug then
             prin2t "convert_to_output..";
 
         for i := 1:dv_length(bexps) do <<
@@ -124,7 +124,7 @@ asserted procedure io_convert_to_output(ring: PolyRing, bexps: Vector, bcoeffs: 
             bcoeffsi := for j := 1:dv_length(getv(bcoeffs, i)) collect
                 getv(getv(bcoeffs, i), j);
             
-            if f4_debug() then <<
+            if !*f4debug then <<
                 prin2t {"poly", i};
                 prin2t {bexpsi, bcoeffsi}
             >>;

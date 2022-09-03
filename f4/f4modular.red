@@ -4,7 +4,7 @@ asserted procedure modular_gcdext(a: Integer, m: Integer): List;
     begin integer buf, u1, u2, u3, v1, v2, v3,
                     buf1, buf2, buf3;
         
-        ASSERT(a < m);
+        % ASSERT(a < m);
         ASSERT(gcdf(a, m) = 1);
 
         u1 := 1;
@@ -48,7 +48,7 @@ asserted procedure modular_invmod(a: Integer, m: Integer): Integer;
 %--------------------------------------------------------------------------------------------------
 
 asserted procedure modular_rational_reconstruction_bound(modulo: Integer): Integer;
-    floor(sqrt(modulo / 2) + 1);
+    isqrt(modulo / 2) + 1;
 
 asserted procedure modular_rational_reconstruction(bnd: Integer, a: Integer, m: Integer): DottedPair;
     begin scalar buf, u1, u2, u3, v1, v2, v3, result,
@@ -72,7 +72,7 @@ asserted procedure modular_rational_reconstruction(bnd: Integer, a: Integer, m: 
         result := t;
         while t do <<
             if v2 > bnd then <<
-                result := false;
+                result := nil;
                 go to Return_
             >>;
 
@@ -128,7 +128,14 @@ asserted procedure modular_CRT(M: Integer, a1: Integer, minv1: Integer,
         n2 := buf * a1;
 
         buf := n1 + n2;
-        return remainder(buf, M)
+
+        buf := remainder(buf, M);
+
+        % Julia: in julia there is no this `if`
+        if buf < 0 then
+            buf := buf + M;
+
+        return buf
     end;
 
 endmodule; % end of modular 

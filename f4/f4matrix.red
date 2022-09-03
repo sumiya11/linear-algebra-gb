@@ -206,11 +206,11 @@ asserted procedure matrix_normalize_sparse_row_qq(ring: PolyRing, row: Vector): 
 asserted procedure matrix_normalize_sparse_row_ff(ring: PolyRing, row: Vector): Vector;
     begin scalar ch, pinv;
         ch := io_prget_ch(ring);
-        pinv := remainder(modular_invmod(getv(row, 1), ch), ch);
+        pinv := iremainder(modular_invmod(getv(row, 1), ch), ch);
         ASSERT(pinv > 0);
 
         for i := 2:dv_length(row) do
-            putv(row, i, remainder(getv(row, i) #* pinv, ch));
+            putv(row, i, iremainder(getv(row, i) #* pinv, ch));
         putv(row, 1, 1);
         return row
     end;
@@ -244,7 +244,7 @@ asserted procedure matrix_reduce_by_pivot_ff(ring: PolyRing, row: Vector, indice
 
         for j := 1:dv_length(indices) do <<
             idx := getv(indices, j);
-            putv(row, idx, remainder(getv(row, idx) #+ mul #* getv(cfs, j), ch))
+            putv(row, idx, iremainder(getv(row, idx) #+ mul #* getv(cfs, j), ch))
         >>;
     end;
 
@@ -425,7 +425,7 @@ asserted procedure matrix_exact_sparse_rref(ring: PolyRing, matrixj: MacaulayMat
             >>
         >>;
         
-        if f4_debug() then <<
+        if !*f4debug then <<
             prin2t {"exact_sparse_rref: lower part reduced:", matrixj};
             prin2t {"exact_sparse_rref: pivs:", pivs}
         >>;
@@ -480,6 +480,170 @@ asserted procedure matrix_linear_algebra(ring: PolyRing, matrixj: MacaulayMatrix
         coeffs := matrix_mget_coeffs(matrixj);
         matrix_mset_coeffs(matrixj, dv_resize(coeffs, matrix_mget_nlow(matrixj)));
         matrix_exact_sparse_rref(ring, matrixj, basis)
+    end;
+
+%--------------------------------------------------------------------------------------------------
+
+asserted procedure matrix_exact_sparse_rref_nf(ring: PolyRing, matrixj: MacaulayMatrix, tobereduced: Basis, basis: Basis);
+    begin scalar ncols, nlow, nright, nleft, uprows, lowrows, low2coef, up2coef, pivs, l2c_tmp,
+                    rowidx2coef, upivs, densecoeffs, bcoeffs, rowexps, cfsref, startcol, 
+                    result, zeroed, newrow, newcfs, mcoeffs, newpivs, k;
+        ncols := matrix_mget_ncols(matrixj);
+        nlow := matrix_mget_nlow(matrixj);
+        nright := matrix_mget_nright(matrixj);
+        nleft := matrix_mget_nleft(matrixj);
+
+        uprows := matrix_mget_uprows(matrixj);
+        lowrows := matrix_mget_lowrows(matrixj);
+        low2coef := matrix_mget_low2coef(matrixj);
+        up2coef := matrix_mget_up2coef(matrixj);
+
+        % Julia
+        % magic :=
+
+        % known pivots
+        % no_copy
+        pivs := dv_undef(ncols);
+        for i := 1:matrix_mget_nup(matrixj) do
+            putv(pivs, i, getv(uprows, i));
+
+        l2c_tmp := dv_undef(max(ncols, nlow));
+        for i := 1:nlow do
+            putv(l2c_tmp, getv(getv(lowrows, i), 1), getv(low2coef, i));
+
+        % no_copy
+        rowidx2coef := low2coef;
+        matrix_mset_low2coef(matrixj, l2c_tmp);
+
+        % unknown pivots
+        % (not discovered yet)
+        % we will modify them inplace when reducing by pivs
+        upivs := matrix_mget_lowrows(matrixj);
+
+        densecoeffs := matrix_zero_coeff_vector(ring, ncols);
+
+        for i := 1:nlow do <<
+            % select next row to be reduced
+            rowexps := getv(upivs, i);
+            
+            % corresponding coefficients from basis
+            % (no need to copy here)
+            cfsref := getv(basis_bget_coeffs(tobereduced), getv(rowidx2coef, i));
+            
+            k := 0;
+
+            % we load coefficients into dense array
+            % into rowexps indices
+            matrix_load_indexed_coefficients(ring, densecoeffs, rowexps, cfsref);
+
+            % reduce it with known pivots from matrixj.uprows
+            % first nonzero in densecoeffs is at startcol position
+            startcol := getv(rowexps, 1);
+
+            {zeroed, newrow, newcfs} := matrix_reduce_dense_row_by_known_pivots_sparse(ring, densecoeffs, matrixj, basis, pivs, startcol, -1, nil);
+
+            % if not fully reduced
+            if not zeroed then <<
+                mcoeffs := matrix_mget_coeffs(matrixj);
+                low2coef := matrix_mget_low2coef(matrixj);
+
+                % matrixj coeffs sparsely stores coefficients of new row
+                putv(mcoeffs, i, newcfs);
+                
+                % add new pivot at column index newrow[1]
+                % (which is the first nnz column of newrow)
+                putv(matrix_mget_lowrows(matrixj), i, newrow);
+
+                % set ref to coefficient to matrixj
+                % guaranteed to be from lower part
+                putv(low2coef, i, i)
+            >>
+        >>;
+
+        matrix_mset_size(matrixj, matrix_mget_nlow(matrixj));
+        matrix_mset_nrows(matrixj, matrix_mget_nlow(matrixj));
+        matrix_mset_npivots(matrixj, matrix_mget_nlow(matrixj))
+    end;
+
+asserted procedure matrix_linear_algebra_nf(ring: PolyRing, matrixj: MacaulayMatrix, tobereduced: Basis, basis: Basis);
+    begin scalar coeffs;
+        coeffs := matrix_mget_coeffs(matrixj);
+        matrix_mset_coeffs(matrixj, dv_resize(coeffs, matrix_mget_nlow(matrixj)));
+        matrix_exact_sparse_rref_nf(ring, matrixj, tobereduced, basis)
+    end;
+
+%--------------------------------------------------------------------------------------------------
+
+asserted procedure matrix_linear_algebra_isgroebner(ring: PolyRing, matrixj: MacaulayMatrix, basis: Basis): Boolean;
+    begin scalar ncols, nlow, nright, nleft, uprows, lowrows, low2coef, up2coef, pivs, l2c_tmp,
+                    rowidx2coef, upivs, densecoeffs, bcoeffs, rowexps, cfsref, startcol, 
+                    result, zeroed, newrow, newcfs, mcoeffs, newpivs, k;
+        result := t;
+        
+        ncols := matrix_mget_ncols(matrixj);
+        nlow := matrix_mget_nlow(matrixj);
+        nright := matrix_mget_nright(matrixj);
+        nleft := matrix_mget_nleft(matrixj);
+
+        uprows := matrix_mget_uprows(matrixj);
+        lowrows := matrix_mget_lowrows(matrixj);
+        low2coef := matrix_mget_low2coef(matrixj);
+        up2coef := matrix_mget_up2coef(matrixj);
+
+        % Julia
+        % magic :=
+
+        % known pivots
+        % no_copy
+        pivs := dv_undef(ncols);
+        for i := 1:matrix_mget_nup(matrixj) do
+            putv(pivs, i, getv(uprows, i));
+
+        l2c_tmp := dv_undef(max(ncols, nlow));
+        for i := 1:nlow do
+            putv(l2c_tmp, getv(getv(lowrows, i), 1), getv(low2coef, i));
+
+        % no_copy
+        rowidx2coef := low2coef;
+        matrix_mset_low2coef(matrixj, l2c_tmp);
+
+        % unknown pivots
+        % (not discovered yet)
+        % we will modify them inplace when reducing by pivs
+        upivs := matrix_mget_lowrows(matrixj);
+
+        densecoeffs := matrix_zero_coeff_vector(ring, ncols);
+
+        bcoeffs := basis_bget_coeffs(basis);
+
+        for i := 1:nlow do <<
+            % select next row to be reduced
+            rowexps := getv(upivs, i);
+            
+            % corresponding coefficients from basis
+            % (no need to copy here)
+            cfsref := getv(bcoeffs, getv(rowidx2coef, i));
+            
+            k := 0;
+
+            % we load coefficients into dense array
+            % into rowexps indices
+            matrix_load_indexed_coefficients(ring, densecoeffs, rowexps, cfsref);
+
+            % reduce it with known pivots from matrixj.uprows
+            % first nonzero in densecoeffs is at startcol position
+            startcol := getv(rowexps, 1);
+
+            {zeroed, newrow, newcfs} := matrix_reduce_dense_row_by_known_pivots_sparse(ring, densecoeffs, matrixj, basis, pivs, startcol, -1, nil);
+
+            if not zeroed then <<
+                result := nil;
+                go to Return_
+            >>
+        >>;
+
+    Return_:
+        return result
     end;
 
 %--------------------------------------------------------------------------------------------------
@@ -562,7 +726,7 @@ asserted procedure matrix_convert_hashes_to_columns(matrixj: MacaulayMatrix,
 
         % monoms from symbolic table represent one column in the matrixj
         
-        if f4_debug() then <<
+        if !*f4debug then <<
             prin2t {"convert_hashes_to_columns: matrix", matrixj};
             prin2t {"convert_hashes_to_columns: symbol_ht", symbol_ht}
         >>;
@@ -584,7 +748,7 @@ asserted procedure matrix_convert_hashes_to_columns(matrixj: MacaulayMatrix,
         % sort columns
         sorting_sort_columns_by_hash(col2hash, symbol_ht);
         
-        if f4_debug() then <<
+        if !*f4debug then <<
             prin2t {"convert_hashes_to_columns: sorted by hash", col2hash}
         >>;
 
@@ -652,6 +816,40 @@ asserted procedure matrix_convert_matrix_rows_to_basis_elements(matrixj: Macaula
         >>;
 
         basis_bset_ntotal(basis, basis_bget_ntotal(basis) + matrix_mget_npivots(matrixj))
+    end;
+
+%--------------------------------------------------------------------------------------------------
+
+asserted procedure matrix_convert_nf_rows_to_basis_elements(matrixj: MacaulayMatrix, 
+                            basis: Basis, ht: MonomialHashtable, symbol_ht: MonomialHashtable);
+    begin scalar rows, crs, bcoeffs, bgens, mcoeffs, low2coef, colidx, row;
+        
+        basis_check_enlarge_basis(basis, matrix_mget_npivots(matrixj));
+        
+        bcoeffs := basis_bget_coeffs(basis);
+        bgens := basis_bget_gens(basis);
+
+        mcoeffs := matrix_mget_coeffs(matrixj);
+        low2coef := matrix_mget_low2coef(matrixj);
+
+        for i := 1:matrix_mget_npivots(matrixj) do <<
+            basis_bset_ndone(basis, basis_bget_ndone(basis) + 1);
+            basis_bset_nlead(basis, basis_bget_nlead(basis) + 1);
+            putv(basis_bget_nonred(basis), basis_bget_nlead(basis), basis_bget_ndone(basis));
+
+            if not null getv(matrix_mget_coeffs(matrixj), i) then <<
+                row := getv(matrix_mget_lowrows(matrixj), i);
+                hashtable_insert_in_basis_hash_table_pivots(row, ht, symbol_ht, matrix_mget_col2hash(matrixj));
+
+                colidx := getv(row, 1);
+
+                putv(bcoeffs, basis_bget_ndone(basis), getv(mcoeffs, i));
+                putv(bgens, basis_bget_ndone(basis), row)
+            >> else <<
+                putv(bcoeffs, basis_bget_ndone(basis), dv_undef(0));
+                putv(bgens, basis_bget_ndone(basis), dv_undef(0))
+            >>
+        >>
     end;
 
 %--------------------------------------------------------------------------------------------------

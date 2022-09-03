@@ -51,7 +51,7 @@ module f4;
 % . internaltypes - type declarations (have no practical effect in Reduce, 
 %                   but are left for consistency with Julia implementation)
 % . io - input-output conversions of polynomial representations
-create!-package('(f4 f4groebner f4f4 f4hashtable f4basis f4matrix f4sorting f4io f4poly f4dv f4lucky f4coeffs f4correctness f4modular), nil);
+create!-package('(f4 f4groebner f4f4 f4hashtable f4basis f4matrix f4sorting f4io f4poly f4dv f4lucky f4coeffs f4correctness f4modular f4normalform f4isgroebner f4constants), nil);
 
 loadtime load!-package 'vector88;
 compiletime load!-package 'vector88;
@@ -60,11 +60,11 @@ load!-package 'rltools;
 
 % Assertions should be OFF in production.
 load!-package 'assert;
-on1 'assert;
-on1 'assert_procedures;
-on1 'assert_inline_procedures;
-on1 'assertinstall;
-on1 'evalassert;
+off1 'assert;
+off1 'assert_procedures;
+off1 'assert_inline_procedures;
+off1 'assertinstall;
+off1 'evalassert;
 
 % from f5io.red
 struct PolyRing;
@@ -113,32 +113,18 @@ struct PrimeTracker;
 
 struct CoeffAccum;
 
-fluid '(coeff_plus!* coeff_times!*);
-
-procedure coeff_modular(flag);
-    if flag then <<
-
-    >> else <<
-        coeff_plus!* := function addsq;
-        coeff_times!* := function multsq
-    >>;
-
-inline procedure coeff_plus(x, y);
-    apply(coeff_plus!*, {x, y});
-
 fluid '(!*backtrace);
+fluid '(f4_largest!-small!-prime!* 
+        f4_largest!-small!-modulus!*);
 
-#if (errorp (errorset (quote (itimes2 (expt 2 55) 2)) nil nil))
-   procedure wuwu();
-      "2^56 is bad";
-#else
-   procedure wuwu();
-      "2^56 is good";
-#endif
+% Debug mode in f4; 
+% prints debug info during execution of f4
+switch f4debug=off;
 
-% turn to switch
-asserted procedure f4_debug();
-    nil;
+% Uses modular lifting internally
+switch f4modular=on;
+
+on1 'roundbf;
 
 % Julia: Reduce-specific things;
 %   As we want to mirror the behavior of Julia with integer division masks as close as possible,
@@ -213,7 +199,10 @@ asserted procedure f4_groebner(u: List): List;
         {ring, exps, coeffs} := io_convert_to_internal(polynomials, vars, ord);
 
         % run under error catch to recover the order in case of error 
-        w := errorset({'groebner_groebner2, mkquote ring, mkquote exps, mkquote coeffs}, t, !*backtrace);
+        if !*f4modular then
+            w := errorset({'groebner_groebner2, mkquote ring, mkquote exps, mkquote coeffs}, t, !*backtrace)
+        else
+            w := errorset({'groebner_groebner1, mkquote ring, mkquote exps, mkquote coeffs}, t, !*backtrace);
         
         if errorp w then
             return nil;
@@ -221,7 +210,7 @@ asserted procedure f4_groebner(u: List): List;
         ans := 'list . io_convert_to_output(ring, bexps, bcoeffs);
 
         torder cdr saveTorder;
-
+        
         return ans
     end;
 
