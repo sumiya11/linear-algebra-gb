@@ -9,13 +9,7 @@ struct DynamicVector checked by vectorp;
 
 % Vector of size n
 asserted procedure dv_undef(n: Integer): DynamicVector;
-    <<
-        if n = 4711 then <<
-            backtrace();
-            rederr "wuwu"
-        >>;
-        mkvect(n)
-    >>;
+    mkvect(n);
 
 % Length of vector x
 asserted procedure dv_length(v: DynamicVector): Integer;
