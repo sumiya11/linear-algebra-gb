@@ -1,0 +1,104 @@
+% nbody-5 system in revgradlex
+% characteristic 0
+% 0 dim
+%
+% PoSSo test suite
+% https://www-sop.inria.fr/saga/POL/BASE/2.multipol/centralpos.html
+
+load_package f4;
+
+
+*** [ redefined 
+
+*** ] redefined 
+
+
+system := {
+3*(b-d)*(bb-dd)+(bb+dd)-6*ff+4,
+3*(b-d)*(bb+dd-2*ff)+5*(bb-dd),
+3*(b-d)^2-6*(b+d)+4*f+3,
+bb^2*b^3-1,dd^2*d^3-1,ff^2*f^3-1
+}$
+
+
+
+vars := {bb,dd,ff,b,d,f}$
+
+
+torder(vars, revgradlex)$
+
+
+
+gb := f4(system)$
+
+(i =  2)
+(i =  3)
+(i =  4)
+(i =  5)
+(i =  6)
+(i =  7)
+(i =  8)
+(i =  9)
+(i =  10)
+(i =  11)
+(i =  12)
+(i =  13)
+(i =  14)
+(i =  15)
+(i =  16)
+(i =  17)
+(i =  18)
+(i =  19)
+(i =  20)
+(i =  21)
+(i =  22)
+(i =  23)
+(i =  24)
+(i =  25)
+(i =  26)
+(i =  27)
+(i =  28)
+(i =  29)
+(i =  30)
+(i =  31)
+(i =  32)
+(i =  33)
+(i =  34)
+(i =  35)
+(i =  36)
+(i =  37)
+(i =  38)
+(i =  39)
+(i =  40)
+(i =  41)
+(i =  42)
+(i =  43)
+(i =  44)
+(i =  45)
+(i =  46)
+(i =  47)
+(i =  48)
+(i =  49)
+(i =  50)
+(i =  51)
+(i =  52)
+(i =  53)
+(i =  54)
+(i =  55)
+(i =  56)
+(i =  57)
+(i =  58)
+(i =  59)
+(i =  60)
+(i =  61)
+(i =  62)
+(i =  63)
+(i =  64)
+(i =  65)
+(i =  66)
+(i =  67)
+(i =  68)
+
+
+end;
+

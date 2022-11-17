@@ -1,8 +1,6 @@
 module f4hashtable;
 % Monomial hashtable implementation.
 
-%--------------------------------------------------------------------------------------------------
-
 %   struct Hashvalue;
 %
 %   stores hash of a monomial,
@@ -57,8 +55,6 @@ asserted procedure hashtable_copy_hashvalue(hv: Hashvalue): Hashvalue;
         hashtable_hvget_idx(hv),
         hashtable_hv_deg(hv)
     );
-
-%--------------------------------------------------------------------------------------------------
 
 %   struct MonomialHashtable
 %   
@@ -193,15 +189,11 @@ asserted procedure hashtable_htset_load(ht: MonomialHashtable, x: Integer): Inte
 asserted procedure hashtable_htset_offset(ht: MonomialHashtable, x: Integer): Integer;
     putv(ht, 14, x);
 
-%--------------------------------------------------------------------------------------------------
-
 % Julia: variable name "mod" changed to "modj"
 % Returns the next look-up position in the table 
 % (that is, implementing open addressing with quadratic probing) 
 asserted procedure hashtable_hashnextindex(h: ExponentHash, j: ExponentHash, modj: ExponentHash): ExponentHash;
     land(h + j, modj) + 1;
-
-%--------------------------------------------------------------------------------------------------
 
 % initialize and set fields for basis hashtable
 asserted procedure hashtable_initialize_basis_hash_table(ring: PolyRing, initial_size: Integer): MonomialHashtable;
@@ -261,8 +253,6 @@ asserted procedure hashtable_initialize_basis_hash_table(ring: PolyRing, initial
                 size, loadj, offset)
     end;
 
-%--------------------------------------------------------------------------------------------------
-
 asserted procedure hashtable_copy_hashtable(ht: MonomialHashtable): MonomialHashtable;
     begin scalar loadj, sz, htexps, httable, htdata, exps, table, data;
         loadj := hashtable_htget_load(ht);
@@ -290,8 +280,6 @@ asserted procedure hashtable_copy_hashtable(ht: MonomialHashtable): MonomialHash
         )
     end;
 
-%--------------------------------------------------------------------------------------------------
-
 % initialize hashtable either for `symbolic_preprocessing` or for `update` functions
 % These are of the same purpose and structure as basis hashtable,
 % but are more local oriented
@@ -299,7 +287,7 @@ asserted procedure hashtable_initialize_secondary_hash_table(ht: MonomialHashtab
     begin scalar initial_size, exponents, hashdata, hashtable,
                     explen, nvars, ord, divmap, divvars, ndivvars, ndivbits,
                     hasher, loadj, size, offset;
-        initial_size := 2^6; % Julia: best size in Julia is 2^6
+        initial_size := 2^6; % best size in Julia is 2^6
         
         exponents := dv_undef(initial_size);
         hashdata := dv_undef(initial_size);
@@ -332,8 +320,6 @@ asserted procedure hashtable_initialize_secondary_hash_table(ht: MonomialHashtab
                 size, loadj, offset)
     end;
 
-%--------------------------------------------------------------------------------------------------
-
 % resizes (if needed) ht so that it can store `size` elements,
 % and clears all previoud data
 asserted procedure hashtable_reinitialize_hash_table(ht: MonomialHashtable, size: Integer);
@@ -353,7 +339,7 @@ asserted procedure hashtable_reinitialize_hash_table(ht: MonomialHashtable, size
 % doubles the size of storage in `ht`,
 % and rehashes all elements
 asserted procedure hashtable_enlarge_hash_table(ht: MonomialHashtable);
-    begin scalar htsize, flag, modj, he, hidx, htdata, httable, j;
+    begin scalar htsize, modj, he, hidx, htdata, httable, j;
         htsize := hashtable_htget_size(ht) * 2;
         hashtable_htset_size(ht, htsize);
         % 3 vectors of equal size inside ht: hashdata (add), exponents (add), hashtable (table)
@@ -377,37 +363,19 @@ asserted procedure hashtable_enlarge_hash_table(ht: MonomialHashtable);
                 hidx := hashtable_hashnextindex(he, j, modj)
             >> until httable[hidx] = 0;
             httable[hidx] := i
-            % flag := t;
-            % for j := 1:htsize do <<
-            %     hidx := hashtable_hashnextindex(he, j, modj);
-            %     if flag and getv(httable, hidx) = 0 then <<
-            %         putv(httable, hidx, i);
-            %         flag := nil
-            %     >>
-            % >>
         >>    
     end;
-
-%--------------------------------------------------------------------------------------------------
 
 asserted procedure hashtable_insert_in_hash_table(ht: MonomialHashtable, e: ExponentVector): ExponentIdx;
     begin scalar he, hasher, htexplen, htsize, hidx, modj, i, httable, htdata, htexps,
                     vidx, present, ve, divmask, toreturn;
         % generate hash
         he := 0;
-        
-        if !*f4debug then
-            prin2t "insert_in_hash_table..";
 
         hasher := hashtable_htget_hasher(ht);
         htexplen := hashtable_htget_explen(ht);
         for i := 1:htexplen do
             he := he + getv(hasher, i)*getv(e, i);
-        
-        if !*f4debug and nil then <<
-            prin2t {"insert_in_hash_table: Hash computed: ", he};
-            prin2t {"insert_in_hash_table: ht:", ht}
-        >>;
 
         % find new elem position in the table
         htsize := hashtable_htget_size(ht);
@@ -426,9 +394,6 @@ asserted procedure hashtable_insert_in_hash_table(ht: MonomialHashtable, e: Expo
         while i < htsize do << % begin
             hidx := hashtable_hashnextindex(he, i, modj);
             vidx := getv(httable, hidx);
-
-            if !*f4debug and nil then
-                prin2t {"insert_in_hash_table: hidx: ", hidx, ", vidx:", vidx};
 
             % if not free
             if vidx = 0 then
@@ -457,9 +422,6 @@ asserted procedure hashtable_insert_in_hash_table(ht: MonomialHashtable, e: Expo
         vidx := hashtable_htget_load(ht) + 1;
         putv(httable, hidx, vidx);
 
-        if !*f4debug and nil then
-            prin2t {"insert_in_hash_table: vidx: ", vidx};
-
         putv(htexps, vidx, dv_similar(e));
         ve := getv(htexps, vidx);
         for i := 1 : dv_length(e) do
@@ -468,16 +430,11 @@ asserted procedure hashtable_insert_in_hash_table(ht: MonomialHashtable, e: Expo
         divmask := hashtable_generate_monomial_divmask(e, ht);
         putv(htdata, vidx, hashtable_Hashvalue(he, divmask, 0, f4_getvlast(e)));
 
-        if !*f4debug and nil then
-            prin2t {"insert_in_hash_table: divmask: ", divmask};
-
         hashtable_htset_load(ht, hashtable_htget_load(ht) + 1);
 
     Return_:
         return vidx
     end;
-
-%--------------------------------------------------------------------------------------------------
 
 % Having `ht` filled with monomials from input polys,
 % computes ht.divmap and divmask for each of already stored monomials
@@ -509,11 +466,6 @@ asserted procedure hashtable_fill_divmask(ht: MonomialHashtable);
                 if getv(e, getv(divvars, j)) < getv(min_exp, j) then
                     putv(min_exp, j, getv(e, getv(divvars, j)))
             >>
-        >>;
-
-        if !*f4debug then <<
-            prin2t {"In fill_divmask"};
-            prin2t {ndivbits, min_exp, max_exp}        
         >>;
 
         ctr := 1;
@@ -557,8 +509,6 @@ asserted procedure hashtable_generate_monomial_divmask(e: ExponentVector, ht: Mo
         return res
     end;
 
-%--------------------------------------------------------------------------------------------------
-
 % h1 divisible by h2
 asserted procedure hashtable_is_monom_divisible(h1: ExponentIdx, h2: ExponentIdx, ht: MonomialHashtable): Boolean;
     begin scalar htdata, e1, e2, result, htexps;
@@ -599,8 +549,6 @@ asserted procedure hashtable_is_gcd_const(h1: ExponentIdx, h2: ExponentIdx, ht: 
     Return_:
         return result
     end;
-
-%--------------------------------------------------------------------------------------------------
 
 % compare pairwise divisibility of lcms from a[first:last] with lcm
 asserted procedure hashtable_check_monomial_division_in_update(
@@ -643,8 +591,6 @@ asserted procedure hashtable_check_monomial_division_in_update(
 
     end;
 
-%--------------------------------------------------------------------------------------------------
-
 % add monomials from `poly` multiplied by exponent vector `etmp`
 % with hash `htmp` to hashtable `symbol_ht`,
 % and substitute hashes in row
@@ -668,12 +614,6 @@ asserted procedure hashtable_insert_multiplied_poly_in_hash_table(
         sdata := hashtable_htget_hashdata(symbol_ht);
         stable := hashtable_htget_hashtable(symbol_ht);
 
-        if !*f4debug then <<
-            prin2t {"INSERTING", poly, "MULTIPLIED BY", etmp, "TO SYM HASHTABLE:"};
-            prin2t {"hash(etmp) = ", htmp};
-            prin2t symbol_ht
-        >>;
-
         l := 1;
     Letsgo:
         while l <= len do begin
@@ -690,13 +630,6 @@ asserted procedure hashtable_insert_multiplied_poly_in_hash_table(
             e := getv(bexps, getv(poly, l));
 
             lastidx := hashtable_htget_load(symbol_ht) + 1;
-
-            if !*f4debug then <<
-                prin2t {"MONOMIAL", e, "WITH HASH h = htmp + hash(e)"};
-                prin2t {"hash(e) = ", hashtable_hvget_hash(getv(bdata, getv(poly, l)))};
-                prin2t {"htmp = ", htmp, "; h = ", h}
-            >>;
-
             enew := getv(sexps, 1);
             
             % multiplied monom exponent
@@ -780,8 +713,6 @@ asserted procedure hashtable_multiplied_poly_to_matrix_row(
         return hashtable_insert_multiplied_poly_in_hash_table(row, htmp, etmp, poly, basis_ht, symbol_ht)
     end;
 
-%--------------------------------------------------------------------------------------------------
-
 asserted procedure hashtable_insert_in_basis_hash_table_pivots(
                 row: Vector, 
                 ht: MonomialHashtable, 
@@ -852,8 +783,6 @@ asserted procedure hashtable_insert_in_basis_hash_table_pivots(
 
     end;
 
-%--------------------------------------------------------------------------------------------------
-
 % computes lcm of he1 and he2 as exponent vectors from ht1
 % and inserts it in ht2
 asserted procedure hashtable_get_lcm(he1: ExponentIdx, he2: ExponentIdx,
@@ -874,8 +803,6 @@ asserted procedure hashtable_get_lcm(he1: ExponentIdx, he2: ExponentIdx,
 
         return hashtable_insert_in_hash_table(ht2, etmp)
     end;
-
-%--------------------------------------------------------------------------------------------------
 
 endmodule; % end of hashtable module
 

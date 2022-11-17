@@ -1,0 +1,122 @@
+load_package f5$
+
+Usage: profile p_1, ..., p_n;           profile expr procedures p_1, ..., p_n
+       unprofile p_1, ..., p_n;         stop profiling p_1, ..., p_n
+       proprint([p_1,..., p_n | all]);  print collected data in tables
+       proall();                        list all profiled procedures
+       pronested();                     list procedures with nested calls
+       proreset();                      delete all collected data
+       prousage();                      this information
++++ core_interreduceinput compiled, 11 + 16 bytes
++++ core_normalform compiled, 21 + 24 bytes
++++ core_topreductionf5 compiled, 22 + 24 bytes
+
+torder({}, revgradlex)$
+
+
+
+k1 := 1/10;
+
+
+       1
+k1 := ----
+       10
+
+k2 := 109/500;
+
+
+       109
+k2 := -----
+       500
+
+k3 := 1;
+
+
+k3 := 1
+
+k4 := 292408052354609/100000000000000;
+
+
+       292408052354609
+k4 := -----------------
+       100000000000000
+
+k5 := 499999999999999/5000000000000000;
+
+
+       499999999999999
+k5 := ------------------
+       5000000000000000
+
+k6 := 263/1000;
+
+
+       263
+k6 := ------
+       1000
+
+k7 := 547/1000;
+
+
+       547
+k7 := ------
+       1000
+
+k8 := 1;
+
+
+k8 := 1
+
+k9 := 292408052354609/10000000000000;
+
+
+       292408052354609
+k9 := -----------------
+       10000000000000
+
+k10 := 239254806051979/1000000000000000;
+
+
+        239254806051979
+k10 := ------------------
+        1000000000000000
+
+k11 := 183/100;
+
+
+        183
+k11 := -----
+        100
+
+k12 := 1460500000017999/20000000000000;
+
+
+        1460500000017999
+k12 := ------------------
+         20000000000000
+
+k13 := 1;
+
+
+k13 := 1
+
+operator diff$
+
+
+odes := { diff(x1, t) = ((-1)*k1*x1 + 1*k5*x1)/k13,
+  diff(x2, t) = (1*(k2 + k3*x1/(x1 + k4))*x1 + (-1)*k6*x2 + 1*k10*x2)/k13,
+  diff(x3, t) = (1*(k7 + k8*x2/(x2 + k9))*x2 + (-1)*k11*x3)/k13 }$
+
+
+odes := for each o in odes collect part(o, 2)$
+
+
+
+gb := f5(odes)$
+
+
+*** (x1 x2) implicitly declared as parameters 
+
+
+end;
+

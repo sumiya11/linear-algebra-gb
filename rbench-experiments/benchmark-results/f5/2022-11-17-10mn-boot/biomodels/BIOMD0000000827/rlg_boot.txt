@@ -1,0 +1,150 @@
+load_package f5$
+
+Usage: profile p_1, ..., p_n;           profile expr procedures p_1, ..., p_n
+       unprofile p_1, ..., p_n;         stop profiling p_1, ..., p_n
+       proprint([p_1,..., p_n | all]);  print collected data in tables
+       proall();                        list all profiled procedures
+       pronested();                     list procedures with nested calls
+       proreset();                      delete all collected data
+       prousage();                      this information
++++ core_interreduceinput compiled, 11 + 16 bytes
++++ core_normalform compiled, 21 + 24 bytes
++++ core_topreductionf5 compiled, 22 + 24 bytes
+
+torder({}, revgradlex)$
+
+
+
+k1 := 31/25;
+
+
+       31
+k1 := ----
+       25
+
+k2 := 23000000000;
+
+
+k2 := 23000000000
+
+k3 := 27/25;
+
+
+       27
+k3 := ----
+       25
+
+k4 := 1900000000000;
+
+
+k4 := 1900000000000
+
+k5 := 1;
+
+
+k5 := 1
+
+k6 := 1;
+
+
+k6 := 1
+
+k7 := 240000000000;
+
+
+k7 := 240000000000
+
+k8 := 2600000000000;
+
+
+k8 := 2600000000000
+
+k9 := 9/200;
+
+
+        9
+k9 := -----
+       200
+
+k10 := 10000000000;
+
+
+k10 := 10000000000
+
+k11 := 10000000000;
+
+
+k11 := 10000000000
+
+k12 := 7/250;
+
+
+         7
+k12 := -----
+        250
+
+k13 := 7/250;
+
+
+         7
+k13 := -----
+        250
+
+k14 := 7/250;
+
+
+         7
+k14 := -----
+        250
+
+k15 := 1;
+
+
+k15 := 1
+
+k16 := 9/2500000000000;
+
+
+              9
+k16 := ---------------
+        2500000000000
+
+k17 := 11/200000000000000;
+
+
+              11
+k17 := -----------------
+        200000000000000
+
+k18 := 37/5000000000000;
+
+
+             37
+k18 := ---------------
+        5000000000000
+
+operator diff$
+
+
+odes := { diff(x1, t) = ((-2)*k15*(1/2*k2*x1^2 - k1*x2) + (-1)*k15*(k7*x1*x3 - k5*x5))/k15,
+  diff(x2, t) = 1*k15*(1/2*k2*x1^2 - k1*x2)/k15,
+  diff(x3, t) = ((-2)*k15*(1/2*k4*x3^2 - k3*x4) + (-1)*k15*(k7*x1*x3 - k5*x5))/k15,
+  diff(x4, t) = (1*k15*(1/2*k4*x3^2 - k3*x4) + (-1)*k15*k11*x4*x8 + 1*k15*k14*x10)/k15,
+  diff(x5, t) = (1*k15*(k7*x1*x3 - k5*x5) + (-1)*k15*k10*x5*x8 + 1*k15*k13*x9)/k15,
+  diff(x6, t) = (-2)*k15*(1/2*k8*x6^2 - k6*x7)/k15,
+  diff(x7, t) = (1*k15*(1/2*k8*x6^2 - k6*x7) + (-1)*k15*(k9*x7 - k12*x8))/k15,
+  diff(x8, t) = 1*k15*(k9*x7 - k12*x8)/k15,
+  diff(x9, t) = (1*k15*k10*x5*x8 + (-1)*k15*k13*x9)/k15,
+  diff(x10, t) = (1*k15*k11*x4*x8 + (-1)*k15*k14*x10)/k15 }$
+
+
+odes := for each o in odes collect part(o, 2)$
+
+
+
+gb := f5(odes)$
+
+
+
+end;
+

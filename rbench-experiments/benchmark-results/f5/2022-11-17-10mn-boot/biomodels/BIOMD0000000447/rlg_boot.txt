@@ -1,0 +1,211 @@
+load_package f5$
+
+Usage: profile p_1, ..., p_n;           profile expr procedures p_1, ..., p_n
+       unprofile p_1, ..., p_n;         stop profiling p_1, ..., p_n
+       proprint([p_1,..., p_n | all]);  print collected data in tables
+       proall();                        list all profiled procedures
+       pronested();                     list procedures with nested calls
+       proreset();                      delete all collected data
+       prousage();                      this information
++++ core_interreduceinput compiled, 11 + 16 bytes
++++ core_normalform compiled, 21 + 24 bytes
++++ core_topreductionf5 compiled, 22 + 24 bytes
+
+torder({}, revgradlex)$
+
+
+
+k1 := 7/200;
+
+
+        7
+k1 := -----
+       200
+
+k2 := 7/20;
+
+
+       7
+k2 := ----
+       20
+
+k3 := 7/5;
+
+
+       7
+k3 := ---
+       5
+
+k4 := 7/200;
+
+
+        7
+k4 := -----
+       200
+
+k5 := 49/2;
+
+
+       49
+k5 := ----
+       2
+
+k6 := 1/200;
+
+
+        1
+k6 := -----
+       200
+
+k7 := 7/20;
+
+
+       7
+k7 := ----
+       20
+
+k8 := 21/20;
+
+
+       21
+k8 := ----
+       20
+
+k9 := 35/2;
+
+
+       35
+k9 := ----
+       2
+
+k10 := 49/2000;
+
+
+         49
+k10 := ------
+        2000
+
+k11 := 7/20;
+
+
+        7
+k11 := ----
+        20
+
+k12 := 49/2;
+
+
+        49
+k12 := ----
+        2
+
+k13 := 21/2000;
+
+
+         21
+k13 := ------
+        2000
+
+k14 := 7/200;
+
+
+         7
+k14 := -----
+        200
+
+k15 := 7/2000;
+
+
+         7
+k15 := ------
+        2000
+
+k16 := 7/100;
+
+
+         7
+k16 := -----
+        100
+
+k17 := 7/2000;
+
+
+         7
+k17 := ------
+        2000
+
+k18 := 49/2;
+
+
+        49
+k18 := ----
+        2
+
+k19 := 21/100;
+
+
+        21
+k19 := -----
+        100
+
+k20 := 21/400;
+
+
+        21
+k20 := -----
+        400
+
+k21 := 7/400;
+
+
+         7
+k21 := -----
+        400
+
+k22 := 7/2000;
+
+
+         7
+k22 := ------
+        2000
+
+k23 := 7/200;
+
+
+         7
+k23 := -----
+        200
+
+k24 := 1;
+
+
+k24 := 1
+
+operator diff$
+
+
+odes := { diff(x1, t) = ((-1)*k24*k1*x3*x1 + (-1)*k24*k3*x4*x1 + 1*k24*k23 + (-1)*k24*k21*x1)/k24,
+  diff(x2, t) = (1*k24*k1*x3*x1 + 1*k24*k3*x4*x1 + (-1)*k24*(k9*x7*x2 - k10*x9) + 1*k24*k11*x9 + (-1)*k24*(k12*x10*x2 - k13*x11) + (-1)*k24*k20*x2)/k24,
+  diff(x3, t) = ((-1)*k24*k2*x2*x3 + (-1)*k24*(k16*x8*x3 - k17*x13) + 1*k24*k22 + (-1)*k24*k20*x3)/k24,
+  diff(x4, t) = (1*k24*k2*x2*x3 + (-1)*k24*(k14*x8*x4 - k15*x12) + (-1)*k24*k20*x4)/k24,
+  diff(x5, t) = ((-1)*k24*k4*x2*x5 + (-1)*k24*k5*x7*x5 + (-1)*k24*k6*x5 + 1*k24*k22 + (-1)*k24*k21*x5)/k24,
+  diff(x6, t) = (1*k24*k4*x2*x5 + 1*k24*k5*x7*x5 + 1*k24*k6*x5 + (-1)*k24*k21*x6 + (-1)*k24*k19*x6)/k24,
+  diff(x7, t) = ((-1)*k24*k5*x7*x5 + 1*k24*k7*x6 + (-1)*k24*(k9*x7*x2 - k10*x9) + (-1)*k24*k21*x7)/k24,
+  diff(x8, t) = (1*k24*k8*x6 + (-1)*k24*(k14*x8*x4 - k15*x12) + (-1)*k24*(k16*x8*x3 - k17*x13) + (-1)*k24*k21*x8)/k24,
+  diff(x9, t) = (1*k24*(k9*x7*x2 - k10*x9) + (-1)*k24*k11*x9 + (-1)*k24*k21*x9 + (-1)*k24*k18*x9)/k24,
+  diff(x10, t) = ((-1)*k24*(k12*x10*x2 - k13*x11) + 1*k24*k22 + (-1)*k24*k21*x10)/k24,
+  diff(x11, t) = (1*k24*(k12*x10*x2 - k13*x11) + (-1)*k24*k21*x11)/k24,
+  diff(x12, t) = (1*k24*(k14*x8*x4 - k15*x12) + (-1)*k24*k21*x12)/k24,
+  diff(x13, t) = (1*k24*(k16*x8*x3 - k17*x13) + (-1)*k24*k21*x13)/k24 }$
+
+
+odes := for each o in odes collect part(o, 2)$
+
+
+
+gb := f5(odes)$
+
+
+
+end;
+

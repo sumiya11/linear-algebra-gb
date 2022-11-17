@@ -45,8 +45,6 @@ asserted procedure modular_invmod(a: Integer, m: Integer): Integer;
         return x
     end;
 
-%--------------------------------------------------------------------------------------------------
-
 asserted procedure modular_rational_reconstruction_bound(modulo: Integer): Integer;
     isqrt(modulo / 2) + 1;
 
@@ -114,9 +112,7 @@ asserted procedure modular_rational_reconstruction(bnd: Integer, a: Integer, m: 
         return result . (num ./ den)
     end;
 
-%--------------------------------------------------------------------------------------------------
-
-% Julia: in Julia, the function modifies its argument;
+% in Julia, the function modifies its argument;
 % Here we return the answer.
 asserted procedure modular_CRT(M: Integer, a1: Integer, minv1: Integer, 
                                 a2: Integer, minv2: Integer, m1: Integer, m2: Integer): Integer;

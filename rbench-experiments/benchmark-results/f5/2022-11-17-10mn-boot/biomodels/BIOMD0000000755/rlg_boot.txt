@@ -1,0 +1,112 @@
+load_package f5$
+
+Usage: profile p_1, ..., p_n;           profile expr procedures p_1, ..., p_n
+       unprofile p_1, ..., p_n;         stop profiling p_1, ..., p_n
+       proprint([p_1,..., p_n | all]);  print collected data in tables
+       proall();                        list all profiled procedures
+       pronested();                     list procedures with nested calls
+       proreset();                      delete all collected data
+       prousage();                      this information
++++ core_interreduceinput compiled, 11 + 16 bytes
++++ core_normalform compiled, 21 + 24 bytes
++++ core_topreductionf5 compiled, 22 + 24 bytes
+
+torder({}, revgradlex)$
+
+
+
+k1 := 1;
+
+
+k1 := 1
+
+k2 := 121267/1000;
+
+
+       121267
+k2 := --------
+        1000
+
+k3 := 94929/200000000000000000000;
+
+
+               94929
+k3 := -----------------------
+       200000000000000000000
+
+k4 := 2569840000000;
+
+
+k4 := 2569840000000
+
+k5 := 387701/5;
+
+
+       387701
+k5 := --------
+         5
+
+k6 := 69679400000;
+
+
+k6 := 69679400000
+
+k7 := 472749/100000000;
+
+
+        472749
+k7 := -----------
+       100000000
+
+k8 := 201671/10000000;
+
+
+        201671
+k8 := ----------
+       10000000
+
+k9 := 1/1000000000;
+
+
+           1
+k9 := ------------
+       1000000000
+
+k10 := 1/6250000;
+
+
+           1
+k10 := ---------
+        6250000
+
+k11 := 7/5000000;
+
+
+           7
+k11 := ---------
+        5000000
+
+operator diff$
+
+
+odes := { diff(x1, t) = (-1)*k1*k2*x1*x2/k1,
+  diff(x2, t) = (-1)*k1*k2*x1*x2/k1,
+  diff(x3, t) = (1*k1*k2*x1*x2 + (-1)*k1*k4*x3*x4 + 1*k1*k5*x6)/k1,
+  diff(x4, t) = ((-1)*k1*k3*x1*x2*x4 + (-1)*k1*k4*x3*x4)/k1,
+  diff(x5, t) = (1*k1*k3*x1*x2*x4 + 1*k1*k6*x3*x7 + (-1)*k1*k8*x5)/k1,
+  diff(x6, t) = (1*k1*k4*x3*x4 + (-1)*k1*k5*x6)/k1,
+  diff(x7, t) = (1*k1*k5*x6 + (-1)*k1*k6*x3*x7 + (-1)*k1*k7*x7)/k1,
+  diff(x8, t) = 1*k1*k7*x7/k1,
+  diff(x9, t) = 1*k1*k8*x5/k1 }$
+
+
+odes := for each o in odes collect part(o, 2)$
+
+
+
+gb := f5(odes)$
+
+
+
+end;
+

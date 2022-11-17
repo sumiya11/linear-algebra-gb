@@ -1,8 +1,6 @@
 module f4basis;
 % Groebner basis and Pairset implementations.
 
-%--------------------------------------------------------------------------------------------------
-
 % struct SPair
 % 
 % SPair represents components of an S-polynomial
@@ -35,8 +33,6 @@ asserted procedure basis_spget_lcmj(sp: SPair): ExponentIdx;
 
 asserted procedure basis_spget_deg(sp: SPair): Degree;
     getv(sp, 4);
-
-%--------------------------------------------------------------------------------------------------
 
 % Pairset struct. 
 %
@@ -84,8 +80,6 @@ asserted procedure basis_check_enlarge_pairset(ps: Pairset, added: Integer);
             basis_psset_pairs(ps, dv_resize(basis_psget_pairs(ps), newsz))
         >>
     end;
-
-%--------------------------------------------------------------------------------------------------
 
 % struct Basis
 % 
@@ -192,8 +186,6 @@ asserted procedure basis_initialize_basis(ring: PolyRing, ngens: Integer): Basis
             ntotal, isred, nonred, lead, nlead)
     end;
 
-%--------------------------------------------------------------------------------------------------
-
 asserted procedure basis_copy_basis_thorough(basis: Basis): Basis;
     begin scalar sz, gens, coeffs, bgens, bcoeffs, gensi, coeffsi,
                     isred, nonred, lead;
@@ -222,8 +214,6 @@ asserted procedure basis_copy_basis_thorough(basis: Basis): Basis;
                         basis_bget_ntotal(basis), isred, nonred, lead, basis_bget_nlead(basis))
     end;
 
-%--------------------------------------------------------------------------------------------------
-
 asserted procedure basis_check_enlarge_basis(basis: Basis, added: Integer);
     begin scalar sz;
         if basis_bget_ndone(basis) + added >= basis_bget_size(basis) then <<
@@ -237,8 +227,6 @@ asserted procedure basis_check_enlarge_basis(basis: Basis, added: Integer);
             basis_bset_lead(basis, dv_resize(basis_bget_lead(basis), sz))
         >>
     end;
-
-%--------------------------------------------------------------------------------------------------
 
 % Normalize each element of the input basis
 % by dividing it by leading coefficient
@@ -278,8 +266,6 @@ asserted procedure basis_normalize_basis_ff(ring: PolyRing, basis: Basis): Basis
         >>;
         return basis
     end;
-
-%--------------------------------------------------------------------------------------------------
 
 asserted procedure basis_update_pairset(
                         pairset: Pairset, basis: Basis, 
@@ -376,8 +362,6 @@ asserted procedure basis_update_pairset(
                     putv(isred, getv(nonred, i), 1)
     end;
 
-%--------------------------------------------------------------------------------------------------
-
 asserted procedure basis_update_basis(basis: Basis, ht: MonomialHashtable, update_ht: MonomialHashtable);
     begin scalar k, lead, nonred, isred, htdata, gens;
 
@@ -454,8 +438,6 @@ asserted procedure basis_is_redundant(pairset: Pairset, basis: Basis,
         return result
     end;
 
-%--------------------------------------------------------------------------------------------------
-
 asserted procedure basis_update(pairset: Pairset, basis: Basis, 
                         ht: MonomialHashtable, update_ht: MonomialHashtable, 
                         plcm: Vector): Vector;
@@ -494,8 +476,6 @@ asserted procedure basis_update(pairset: Pairset, basis: Basis,
 
         return plcm
     end;
-
-%--------------------------------------------------------------------------------------------------
 
 asserted procedure basis_fill_data(basis: Basis, ht: MonomialHashtable, 
                                     exponents: Vector, coeffs: Vector);
@@ -572,9 +552,6 @@ asserted procedure basis_standardize_basis(ring: PolyRing, basis: Basis,
         basis_bset_nonred(basis, dv_resize(nonred, nlead));
         basis_bset_isred(basis, dv_resize(isred, nlead));
 
-        if !*f4debug then
-            prin2t {"In standardize, just before sort", basis};
-
         sorting_sort_gens_by_lead_increasing_in_standardize(basis, ht, ord);
         
         return basis_normalize_basis(ring, basis)
@@ -627,8 +604,6 @@ asserted procedure basis_hash_to_exponents(basis: Basis, ht: MonomialHashtable):
 
         return exps
     end;
-
-%--------------------------------------------------------------------------------------------------
 
 asserted procedure basis_insert_plcms_in_basis_hash_table(pairset: Pairset, offj: Integer, 
                     ht: MonomialHashtable, update_ht: MonomialHashtable, 
@@ -718,8 +693,6 @@ asserted procedure basis_insert_plcms_in_basis_hash_table(pairset: Pairset, offj
         
         basis_psset_load(pairset, m - 1)
     end;
-
-%--------------------------------------------------------------------------------------------------
 
 endmodule; % end of basis module
 

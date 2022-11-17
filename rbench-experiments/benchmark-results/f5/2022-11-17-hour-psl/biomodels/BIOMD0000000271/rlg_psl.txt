@@ -1,0 +1,136 @@
+load_package f5$
+
+Usage: profile p_1, ..., p_n;           profile expr procedures p_1, ..., p_n
+       unprofile p_1, ..., p_n;         stop profiling p_1, ..., p_n
+       proprint([p_1,..., p_n | all]);  print collected data in tables
+       proall();                        list all profiled procedures
+       pronested();                     list procedures with nested calls
+       proreset();                      delete all collected data
+       prousage();                      this information
+*** (core_interreduceinput): base 16#14D3120, length 10#109 bytes
+*** (core_normalform): base 16#14D3200, length 10#76 bytes
+*** (core_topreductionf5): base 16#14D32B0, length 10#76 bytes
+
+torder({}, revgradlex)$
+
+
+
+k1 := 164683/5000000;
+
+
+       164683
+k1 := ---------
+       5000000
+
+k2 := 516;
+
+
+k2 := 516
+
+k3 := 41/390625;
+
+
+         41
+k3 := --------
+       390625
+
+k4 := 34427/2000000;
+
+
+        34427
+k4 := ---------
+       2000000
+
+k5 := 748267/10000000;
+
+
+        748267
+k5 := ----------
+       10000000
+
+k6 := 198761/20000000;
+
+
+        198761
+k6 := ----------
+       20000000
+
+k7 := 317871/100000000;
+
+
+        317871
+k7 := -----------
+       100000000
+
+k8 := 82021/5000000;
+
+
+        82021
+k8 := ---------
+       5000000
+
+k9 := 203019/100;
+
+
+       203019
+k9 := --------
+        100
+
+k10 := 0;
+
+
+k10 := 0
+
+k11 := 1;
+
+
+k11 := 1
+
+k12 := 1;
+
+
+k12 := 1
+
+k13 := 1;
+
+
+k13 := 1
+
+k14 := 203019/100;
+
+
+        203019
+k14 := --------
+         100
+
+k15 := 0;
+
+
+k15 := 0
+
+k16 := 0;
+
+
+k16 := 0
+
+operator diff$
+
+
+odes := { diff(x1, t) = (1*k1*k2*k13 + (-1)*k1*x1*k13 + (-1)*k3*x2*x1*k13 + 1*k4*x3*k13 + 1*k6*x4*k13)/k12,
+  diff(x2, t) = ((-1)*k3*x2*x1*k13 + 1*k4*x3*k13 + 1*k6*x4*k13)/k11,
+  diff(x3, t) = (1*k3*x2*x1*k13 + (-1)*k4*x3*k13 + (-1)*k5*x3*k13)/k12,
+  diff(x4, t) = (1*k5*x3*k13 + (-1)*k6*x4*k13 + (-1)*k7*x4*k13 + (-1)*k8*x4*k13)/k13,
+  diff(x5, t) = 1*k7*x4*k13/k13,
+  diff(x6, t) = 1*k8*x4*k13/k11 }$
+
+
+odes := for each o in odes collect part(o, 2)$
+
+
+
+gb := f5(odes)$
+
+
+
+end;
+

@@ -5,10 +5,6 @@ module f4io;
 %   the one from the Julia implementation.
 %   This is caused by the fact that conversion between SQ and our polynomial type
 %   differs from Julia (Julia has no concept of SQ).   
-% *Still, The interface provided by the file is the same as in Julia:*
-%   
-
-%--------------------------------------------------------------------------------------------------
 
 % struct PolyRing - stores information about polynomial ring
 % 
@@ -51,15 +47,10 @@ asserted procedure io_prset_ord(pr: PolyRing, x);
 asserted procedure io_prset_ch(pr: PolyRing, x): Integer;
     putv(pr, 4, x);
 
-%--------------------------------------------------------------------------------------------------
-
 % list of lp --> {ring, vector of vectors of monons, vector of vectors of coeffs}
 asserted procedure io_convert_to_internal(polys: List, vars: List, ord: Any): List;
     begin scalar n, gens, coeffs, ring, i, gensi, coeffsi, 
                     gensij, explen, gensij_list;
-        
-        if !*f4debug then
-            prin2t "convert_to_internal..";
         
         vars := cdr vars;
 
@@ -67,9 +58,6 @@ asserted procedure io_convert_to_internal(polys: List, vars: List, ord: Any): Li
         gens := dv_undef(n);
         coeffs := dv_undef(n);
         ring := io_PolyRing(length(vars), length(vars) + 1, ord, 0);
-        
-        if !*f4debug then
-            prin2t {"convert_to_internal: ring:", ring};
 
         % Julia!!
         % poly_initRing('list . vars, ord);
@@ -82,11 +70,6 @@ asserted procedure io_convert_to_internal(polys: List, vars: List, ord: Any): Li
             poly := poly_sq2poly(simp poly);
             gensi := poly_getTerms(poly);
             coeffsi := poly_getCoeffs(poly);
-
-            if !*f4debug then <<
-                prin2t {"poly", i};
-                prin2t {gensi, coeffsi}
-            >>;
 
             gensi := f4_list2vector(gensi);
             coeffsi := f4_list2vector(coeffsi);
@@ -112,9 +95,6 @@ asserted procedure io_convert_to_internal(polys: List, vars: List, ord: Any): Li
 % {ring, vector of vectors of monons, vector of vectors of coeffs} --> list of lp
 asserted procedure io_convert_to_output(ring: PolyRing, bexps: Vector, bcoeffs: Vector): List;
     begin scalar anssq, bexpsi, bcoeffsi;
-        
-        if !*f4debug then
-            prin2t "convert_to_output..";
 
         for i := 1:dv_length(bexps) do <<
             bexpsi := getv(bexps, i);
@@ -124,11 +104,6 @@ asserted procedure io_convert_to_output(ring: PolyRing, bexps: Vector, bcoeffs: 
             bcoeffsi := for j := 1:dv_length(getv(bcoeffs, i)) collect
                 getv(getv(bcoeffs, i), j);
             
-            if !*f4debug then <<
-                prin2t {"poly", i};
-                prin2t {bexpsi, bcoeffsi}
-            >>;
-
             push(poly_poly2lp(poly_Polynomial(bexpsi, bcoeffsi)), anssq)
         >>;
         return reversip(anssq)

@@ -3,8 +3,6 @@ module f4constants;
 fluid '(f4_largest!-small!-modulus!*);
 fluid '(f4_largest!-small!-prime!*);
 
-% on1 'assert;
-
 if 'sixty!-four memq lispsystem!* and 'csl memq lispsystem!* then
    f4_largest!-small!-modulus!* := 2^(64-5)                  % 2^59
 else if 'sixty!-four memq lispsystem!* and 'psl memq lispsystem!* then

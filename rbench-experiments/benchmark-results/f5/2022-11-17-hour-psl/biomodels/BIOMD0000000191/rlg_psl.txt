@@ -1,0 +1,150 @@
+load_package f5$
+
+Usage: profile p_1, ..., p_n;           profile expr procedures p_1, ..., p_n
+       unprofile p_1, ..., p_n;         stop profiling p_1, ..., p_n
+       proprint([p_1,..., p_n | all]);  print collected data in tables
+       proall();                        list all profiled procedures
+       pronested();                     list procedures with nested calls
+       proreset();                      delete all collected data
+       prousage();                      this information
+*** (core_interreduceinput): base 16#14D3120, length 10#109 bytes
+*** (core_normalform): base 16#14D3200, length 10#76 bytes
+*** (core_topreductionf5): base 16#14D32B0, length 10#76 bytes
+
+torder({}, revgradlex)$
+
+
+
+k1 := 1;
+
+
+k1 := 1
+
+k2 := 1;
+
+
+k2 := 1
+
+k3 := 110;
+
+
+k3 := 110
+
+k4 := 1500;
+
+
+k4 := 1500
+
+k5 := 1000;
+
+
+k5 := 1000
+
+k6 := 70;
+
+
+k6 := 70
+
+k7 := 321/2;
+
+
+       321
+k7 := -----
+        2
+
+k8 := 847;
+
+
+k8 := 847
+
+k9 := 420;
+
+
+k9 := 420
+
+k10 := 360;
+
+
+k10 := 360
+
+k11 := 70;
+
+
+k11 := 70
+
+k12 := 847;
+
+
+k12 := 847
+
+k13 := 321/2;
+
+
+        321
+k13 := -----
+         2
+
+k14 := 420;
+
+
+k14 := 420
+
+k15 := 847;
+
+
+k15 := 847
+
+k16 := 360;
+
+
+k16 := 360
+
+k17 := 133/100;
+
+
+        133
+k17 := -----
+        100
+
+k18 := 16;
+
+
+k18 := 16
+
+k19 := 13/1000;
+
+
+         13
+k19 := ------
+        1000
+
+k20 := 90;
+
+
+k20 := 90
+
+k21 := 330;
+
+
+k21 := 330
+
+operator diff$
+
+
+odes := { diff(x1, t) = 0,
+  diff(x2, t) = (1*k2*k3*x3/(k4*(1 + x2/k5) + x3) + (-1)*k2*(k13/(1 + k21/k11)*x2/(k16*(1 + x3/k11) + x2) + k14/(1 + k21/k12)*x2/(k15*(1 + x3/k12) + x2)) + (-1)*k2*k19*x2/(k20 + x2))/k2,
+  diff(x3, t) = ((-1)*k2*k3*x3/(k4*(1 + x2/k5) + x3) + 1*k1*(k21/(k6 + k21)*k7/(1 + x2/k10 + x3/k6) + k21/(k8 + k21)*k9/(1 + x2/k10 + x3/k8)) + (-1)*k2*k17*x3/(k18 + x3))/k2 }$
+
+
+odes := for each o in odes collect part(o, 2)$
+
+
+
+gb := f5(odes)$
+
+
+*** (x2 x3) implicitly declared as parameters 
+
+
+end;
+

@@ -1,0 +1,42 @@
+% ojika-4 system in revgradlex
+% characteristic 0
+
+load_package groebner;
+
+
+
+system := {
+        x1+x3*x1^3+x1*x3*x2^2-x1*x3,
+        10*x2-2*x2*x3*x1^2-x3*x2^3-x2*x3,
+        -6*x3^2*x1^4-3*x1^2*x2^2*x3^2-x3^2*x1^2+28*x3*x1^2 - 3*x3^2*x2^4+2*x3^2*x2^2+7*x3*x2^2+x3^2-11*x3+10
+};
+
+
+                 2        2
+system := {x1*(x1 *x3 + x2 *x3 - x3 + 1),
+
+                      2        2
+           x2*( - 2*x1 *x3 - x2 *x3 - x3 + 10),
+
+                  4   2       2   2   2     2   2        2          4   2
+            - 6*x1 *x3  - 3*x1 *x2 *x3  - x1 *x3  + 28*x1 *x3 - 3*x2 *x3
+
+                  2   2       2        2
+            + 2*x2 *x3  + 7*x2 *x3 + x3  - 11*x3 + 10}
+
+
+vars := {x1, x2, x3};
+
+
+vars := {x1,x2,x3}
+
+torder(vars, revgradlex)$
+
+
+
+gb := groebner(system)$
+
+
+
+end;
+

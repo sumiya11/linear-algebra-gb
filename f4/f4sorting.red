@@ -1,51 +1,7 @@
 module f4sorting;
-% Sorting routines used in f4.
+% Sorting routines used in f4
 
-%--------------------------------------------------------------------------------------------------
-
-asserted procedure sorting_quicksort_selectpivot(v: Vector, lo: Integer, hi: Integer, cmp);
-    v[lo];
-
-% select a pivot, and partition v according to the pivot
-asserted procedure sorting_quicksort_partition(v: Vector, lo: Integer, hi: Integer, cmp);
-    begin scalar pivot, i, j, c;
-        pivot := sorting_quicksort_selectpivot(v, lo, hi, cmp);
-        i := lo;
-        j := hi;
-        while t do <<
-            i := i + 1;
-            j := j - 1;
-            while apply(cmp, {v[i], pivot}) do
-                i := i + 1;
-            while apply(cmp, {pivot, v[j]}) do
-                j := j - 1; 
-            if i >= j then
-                go to Break;
-            c := v[i];
-            v[i] := v[j];
-            v[j] := c
-        >>;
-    Break:
-        v[lo] := v[j];
-        v[j] := pivot;
-        return j
-    end;
-
-asserted procedure sorting_quicksort_chunk(v: Vector, lo: Integer, hi: Integer, cmp);
-    begin scalar j;
-        if lo + 1 >= hi then
-            return;
-        j := sorting_quicksort_partition(v, lo, hi, cmp);
-        sorting_quicksort_chunk(v, lo, j-1, cmp);
-        sorting_quicksort_chunk(v, j+1, hi, cmp)
-    end;
-
-asserted procedure sorting_quicksort(v: Vector, cmp);
-    sorting_quicksort_chunk(v, 1, upbv(v), cmp);
-
-%--------------------------------------------------------------------------------------------------
-
-% degrevlex exponent vector comparison
+% degrevlex exponent vector comparator
 asserted procedure sorting_exponent_isless_drl(ea: ExponentVector, eb: ExponentVector): Boolean;
     begin integer i;
         if f4_getvlast(ea) < f4_getvlast(eb) then
@@ -63,7 +19,7 @@ asserted procedure sorting_exponent_isless_drl(ea: ExponentVector, eb: ExponentV
             return t
     end;
 
-% lex exponent vector comparison
+% lex exponent vector comparator
 asserted procedure sorting_exponent_isless_lex(ea: ExponentVector, eb: ExponentVector): Boolean;
     begin integer i;
         i := 1;
@@ -76,15 +32,13 @@ asserted procedure sorting_exponent_isless_lex(ea: ExponentVector, eb: ExponentV
             return nil
     end;
 
-%--------------------------------------------------------------------------------------------------
-
+% sorts terms and corresponding coefficients from the basis
+% by their leading term in non-decreasing order.
+%
+% Used only once to sort input generators
 asserted procedure sorting_comparator_sort_gens_by_lead_increasing(x, y);
     sorting_exponent_isless_drl(car x, car y);
 
-% sorts generators and corresponding coefficients from basis
-% by their leading monomial in increasing ordering
-%
-% Used only once to sort input generators
 asserted procedure sorting_sort_gens_by_lead_increasing(basis: Basis, ht: MonomialHashtable);
     begin scalar gens, exps, inds, coeffs, x;
         gens := basis_bget_gens(basis);
@@ -122,8 +76,6 @@ asserted procedure sorting_sort_gens_by_lead_increasing2(basis: Basis, ht: Monom
         >>
     end;
 
-%--------------------------------------------------------------------------------------------------
-
 asserted procedure sorting_comparator_sort_input_to_change_ordering(x, y);
     not sorting_exponent_isless_drl(car x, car y);
 
@@ -142,13 +94,11 @@ asserted procedure sorting_sort_input_to_change_ordering(exps, coeffs, ord);
         >>
     end;
 
-%--------------------------------------------------------------------------------------------------
-
 asserted procedure sorting_comparator_sort_gens_by_lead_increasing_in_standardize(x, y);
     sorting_exponent_isless_drl(car x, car y);
 
 asserted procedure sorting_sort_gens_by_lead_increasing_in_standardize(basis: Basis, ht: MonomialHashtable, ord);
-    begin scalar gens, exps, nnr, lead, genscopy, coeffs, coeffscopy, leadcopy, inds, x;
+    begin scalar gens, exps, nnr, lead, coeffs, inds, x;
         gens := basis_bget_gens(basis);
         exps := hashtable_htget_exponents(ht);
         lead := basis_bget_lead(basis);
@@ -167,8 +117,6 @@ asserted procedure sorting_sort_gens_by_lead_increasing_in_standardize(basis: Ba
             putv(lead, i, cadddr x)
         >>
     end;
-
-%--------------------------------------------------------------------------------------------------
 
 % returns degree(x) < degree(y)
 asserted procedure sorting_comparator_sort_pairset_by_degree(x: SPair, y: SPair);
@@ -190,8 +138,6 @@ asserted procedure sorting_sort_pairset_by_degree(ps: Pairset, from: Integer, sz
             putv(pairs, i, pop(part))
     end;
 
-%--------------------------------------------------------------------------------------------------
-
 asserted procedure sorting_comparator_sort_matrix_rows_decreasing(a, b);
     begin scalar va, vb;
 
@@ -212,9 +158,9 @@ asserted procedure sorting_comparator_sort_matrix_rows_decreasing(a, b);
         vb := dv_length(b);
 
         if va > vb then
-            return nil;
-        if va < vb then
             return t;
+        if va < vb then
+            return nil;
 
         return nil
     end;
@@ -229,9 +175,9 @@ asserted procedure sorting_comparator_sort_matrix_rows_increasing(a, b);
         vb := getv(b, 1);
 
         if va > vb then
-            return nil;
-        if va < vb then
             return t;
+        if va < vb then
+            return nil;
 
         % same column index => compare density of rows
 
@@ -246,7 +192,7 @@ asserted procedure sorting_comparator_sort_matrix_rows_increasing(a, b);
         return nil
     end;
 
-% by column index and density
+% sort matrix rows by column index and density
 asserted procedure sorting_sort_matrix_rows_decreasing(matrixj: MacaulayMatrix);
     begin scalar inds, uprows, up2coef, x;
         % smaller means  pivot being more left  %
@@ -266,7 +212,7 @@ asserted procedure sorting_sort_matrix_rows_decreasing(matrixj: MacaulayMatrix);
         >>
     end;
 
-% by column index and density
+% sort matrix rows by column index and density
 asserted procedure sorting_sort_matrix_rows_increasing(matrixj: MacaulayMatrix);
     begin scalar inds, lowrows, low2coef, x;
         % smaller means  pivot being more left  %
@@ -286,8 +232,6 @@ asserted procedure sorting_sort_matrix_rows_increasing(matrixj: MacaulayMatrix);
         >>
     end;
 
-%--------------------------------------------------------------------------------------------------
-
 asserted procedure sorting_comparator_sort_pairset_by_lcm_drl(x, y);
     sorting_exponent_isless_drl(cadr x, cadr y);
 
@@ -300,24 +244,12 @@ asserted procedure sorting_sort_pairset_by_lcm(pairset: Pairset, npairs: Integer
         ps := basis_psget_pairs(pairset);
         exps := hashtable_htget_exponents(ht);
 
-        if !*f4debug then
-            prin2t {"sort_pairset_by_lcm:", ps, ", npairs:", npairs};
-
         part := for i := 1:npairs collect {getv(ps, i), getv(exps, basis_spget_lcmj(getv(ps, i)))};
-
-        if !*f4debug then
-            prin2t {"sort_pairset_by_lcm: before", part};
-
         part := sort(part, 'sorting_comparator_sort_pairset_by_lcm_drl);
-        
-        if !*f4debug then
-            prin2t {"sort_pairset_by_lcm: after", part};
 
         for i := 1:npairs do
             putv(ps, i, car pop(part))
     end;
-
-%--------------------------------------------------------------------------------------------------
 
 % sorts generators selected in normal strategy function
 % by their ordering in the current basis (identity sort)
@@ -325,19 +257,11 @@ asserted procedure sorting_sort_generators_by_position(gens: Vector, loadj: Inte
     begin scalar part;
         part := for i := 1:loadj collect getv(gens, i);
 
-        if !*f4debug then
-            prin2t {"sort_generators_by_position: before sort: ", part, loadj};
-
         part := sort(part, '<);
-
-        if !*f4debug then
-            prin2t {"sort_generators_by_position: after sort: ", part, loadj};
 
         for i := 1:loadj do
             putv(gens, i, pop(part))
     end;
-
-%--------------------------------------------------------------------------------------------------
 
 asserted procedure sorting_comparator_sorting_sort_columns_by_hash_drl(a, b);
     begin scalar ha, hb, ea, eb;
@@ -351,7 +275,7 @@ asserted procedure sorting_comparator_sorting_sort_columns_by_hash_drl(a, b);
     end;
 
 asserted procedure sorting_sort_columns_by_hash(col2hash: Vector, symbol_ht: MonomialHashtable);
-    begin scalar hd, es, len, col2hash_list, listtosort;
+    begin scalar hd, es, len, listtosort;
         hd := hashtable_htget_hashdata(symbol_ht);
         es := hashtable_htget_exponents(symbol_ht);
         len := hashtable_htget_explen(symbol_ht);
@@ -364,8 +288,6 @@ asserted procedure sorting_sort_columns_by_hash(col2hash: Vector, symbol_ht: Mon
         for i := 1:dv_length(col2hash) do
             putv(col2hash, i, car pop(listtosort))
     end;
-
-%--------------------------------------------------------------------------------------------------
 
 endmodule; % end of sorting module
 

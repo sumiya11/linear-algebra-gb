@@ -1,8 +1,6 @@
 module f4coeffs;
 % Polynomial coefficients manipulations
 
-% Julia: no CoeffBuffer
-
 asserted procedure coeffs_CoeffAccum(): CoeffAccum;
     coeffs_CoeffAccum1(dv_undef(0), dv_undef(0), dv_undef(0));
 
@@ -33,8 +31,6 @@ asserted procedure coeffs_caset_prev_gb_coeffs_zz(ca: CoeffAccum, x): Vector;
 asserted procedure coeffs_caset_gb_coeffs_qq(ca: CoeffAccum, x): Vector;
     putv(ca, 3, x);
 
-%--------------------------------------------------------------------------------------------------
-
 asserted procedure coeffs_common_denominator(coeffs: Vector): Integer;
     begin scalar den; 
         den := 1;
@@ -52,7 +48,6 @@ asserted procedure coeffs_scale_denominators1(coeffs_qq: Vector, coeffs_zz: Vect
             ASSERT(dv_length(coeffs_qq[i]) = dv_length(coeffs_zz[i]));
 
             den := coeffs_common_denominator(coeffs_qq[i]);
-            % prin2t {"uwuw", den};
 
             for j := 1:dv_length(coeffs_qq[i]) do <<
                 num := numr(coeffs_qq[i, j]);
@@ -71,8 +66,6 @@ asserted procedure coeffs_scale_denominators(coeffs_qq: Vector): Vector;
             putv(coeffs_zz, i, dv_zeros(dv_length(coeffs_qq[i])));
         return coeffs_scale_denominators1(coeffs_qq, coeffs_zz)
     end;
-
-%--------------------------------------------------------------------------------------------------
 
 asserted procedure coeffs_reduce_modulo(coeffs_zz: Vector, coeffs_ff: Vector, prime);
     begin scalar p, buf, c, cfs_zz_i;
@@ -95,8 +88,6 @@ asserted procedure coeffs_reduce_modulo(coeffs_zz: Vector, coeffs_ff: Vector, pr
             >>
         >>;
     end;
-
-%--------------------------------------------------------------------------------------------------
 
 asserted procedure coeffs_resize_accum(coeffaccum: CoeffAccum, gb_coeffs);
     <<
@@ -122,7 +113,7 @@ asserted procedure coeffs_reconstruct_trivial_crt(coeffaccum: CoeffAccum, gb_coe
     end;
 
 asserted procedure coeffs_reconstruct_crt(coeffaccum: CoeffAccum, primetracker: PrimeTracker, gb_coeffs_ff, ch: Integer);
-    begin scalar buf, n1, n2, M, bigch, invm1, invm2, ca, cf, gb_coeffs_zz, prev_gb_coeffs_zz;
+    begin scalar buf, M, bigch, invm1, invm2, ca, cf, gb_coeffs_zz, prev_gb_coeffs_zz;
         if dv_isempty(coeffs_caget_gb_coeffs_qq(coeffaccum)) then <<
             coeffs_resize_accum(coeffaccum, gb_coeffs_ff);
             coeffs_reconstruct_trivial_crt(coeffaccum, gb_coeffs_ff)
@@ -154,8 +145,6 @@ asserted procedure coeffs_reconstruct_crt(coeffaccum: CoeffAccum, primetracker: 
         lucky_updatemodulo(primetracker)
     end;
 
-%--------------------------------------------------------------------------------------------------
-
 asserted procedure coeffs_reconstruct_modulo(coeffaccum: CoeffAccum, primetracker: PrimeTracker): Boolean;
     begin scalar success, modulo, bnd, gb_coeffs_zz, gb_coeffs_qq, result, buf, cz, cq;
 
@@ -185,7 +174,6 @@ asserted procedure coeffs_reconstruct_modulo(coeffaccum: CoeffAccum, primetracke
     Return_:
         return result
     end;
-
 
 endmodule; % end of f4coeffs
 

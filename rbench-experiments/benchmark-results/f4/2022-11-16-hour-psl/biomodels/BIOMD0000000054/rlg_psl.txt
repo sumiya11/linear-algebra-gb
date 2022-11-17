@@ -1,0 +1,104 @@
+load_package f4$
+
+
+*** [ redefined 
+
+*** ] redefined 
+
+torder({}, revgradlex)$
+
+
+
+k1 := 1;
+
+
+k1 := 1
+
+k2 := 1/100;
+
+
+        1
+k2 := -----
+       100
+
+k3 := 121/1000;
+
+
+       121
+k3 := ------
+       1000
+
+k4 := 100;
+
+
+k4 := 100
+
+k5 := 1/5;
+
+
+       1
+k5 := ---
+       5
+
+k6 := 337/25;
+
+
+       337
+k6 := -----
+       25
+
+k7 := 1/50;
+
+
+       1
+k7 := ----
+       50
+
+k8 := 1/100;
+
+
+        1
+k8 := -----
+       100
+
+k9 := 6/5;
+
+
+       6
+k9 := ---
+       5
+
+k10 := -1;
+
+
+k10 := -1
+
+k11 := 1;
+
+
+k11 := 1
+
+operator diff$
+
+
+odes := { diff(x1, t) = (1*k11*k3*k4 + (-3)*k11*k5*x1*(x3 + 3*x2 - (6*x3*x2 - 3*x2^2 + x3^2)^(1/2))/6)/k11,
+  diff(x2, t) = ((-1)*k11*k5*x1*(x3 + 3*x2 - (6*x3*x2 - 3*x2^2 + x3^2)^(1/2))/6 + 1*k11*k6*((x3 + 3*x2 - (6*x3*x2 - 3*x2^2 + x3^2)^(1/2))/6)^(13/25)*((7*x3 - 3*x2 - (6*x3*x2 - 3*x2^2 + x3^2)^(1/2))/6)^(41/100) + (-1)*k11*2*k7)/k11,
+  diff(x3, t) = 1*k11*k7*(1 - k8*((x3 + 3*x2 - (6*x3*x2 - 3*x2^2 + x3^2)^(1/2))/6)^k9*((7*x3 - 3*x2 - (6*x3*x2 - 3*x2^2 + x3^2)^(1/2))/6)^k10)/k11 }$
+
+
+odes := for each o in odes collect part(o, 2)$
+
+
+
+gb := f4(odes)$
+
+
+*** ((expt 2 (quotient 1 25)) (expt 2 (quotient 1 100)) (expt 3 (quotient 1 25))
+(expt 3 (quotient 1 100)) (expt (plus (minus (times 3 (expt x2 2))) (times 6 x2
+x3) (expt x3 2)) (quotient 1 2)) (expt 3 (quotient 1 5)) (expt 2 (quotient 1 5))
+x2 x3) implicitly declared as parameters 
+***** Non-numeric argument in arithmetic
+
+
+end;
+

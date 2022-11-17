@@ -1,8 +1,6 @@
 module f4matrix;
 % The matrixj used in f4-style reduction.
 
-%--------------------------------------------------------------------------------------------------
-
 % struct MacaulayMatrix
 %
 % Provides the `MacaulayMatrix` interface, which implements Macaulay matrixj
@@ -172,8 +170,6 @@ asserted procedure matrix_reinitialize_matrix(matrixj: MacaulayMatrix, npairs: I
         return matrixj
     end;
 
-%--------------------------------------------------------------------------------------------------
-
 asserted procedure matrix_zero_coeff_vector(ring, ncols);
     begin scalar v, ch;
         v := dv_undef(ncols);
@@ -182,8 +178,6 @@ asserted procedure matrix_zero_coeff_vector(ring, ncols);
             putv(v, i, if ch = 0 then (nil ./ 1) else 0);
         return v
     end;
-
-%--------------------------------------------------------------------------------------------------
 
 % Normalize `row` by first coefficient
 asserted procedure matrix_normalize_sparse_row(ring: PolyRing, row: Vector): Vector;
@@ -207,15 +201,13 @@ asserted procedure matrix_normalize_sparse_row_ff(ring: PolyRing, row: Vector): 
     begin scalar ch, pinv;
         ch := io_prget_ch(ring);
         pinv := iremainder(modular_invmod(getv(row, 1), ch), ch);
-        ASSERT(pinv > 0);
+        % ASSERT(pinv > 0);
 
         for i := 2:dv_length(row) do
             putv(row, i, iremainder(getv(row, i) #* pinv, ch));
         putv(row, 1, 1);
         return row
     end;
-
-%--------------------------------------------------------------------------------------------------
 
 % reduces row by mul*cfs at indices positions
 asserted procedure matrix_reduce_by_pivot(ring: PolyRing, row: Vector, indices: Vector, cfs: Vector);
@@ -240,15 +232,13 @@ asserted procedure matrix_reduce_by_pivot_ff(ring: PolyRing, row: Vector, indice
     begin scalar mul, idx, ch;
         ch := io_prget_ch(ring);
         mul := ch #- getv(row, getv(indices, 1));
-        ASSERT(mul > 0);
+        % ASSERT(mul > 0);
 
         for j := 1:dv_length(indices) do <<
             idx := getv(indices, j);
             putv(row, idx, iremainder(getv(row, idx) #+ mul #* getv(cfs, j), ch))
         >>;
     end;
-
-%--------------------------------------------------------------------------------------------------
 
 % zero entries of densecoeffs and load coefficients cfsref to indices rowexps
 asserted procedure matrix_load_indexed_coefficients(ring: PolyRing, densecoeffs: Vector, rowexps: Vector, cfsref: Vector);
@@ -274,8 +264,6 @@ asserted procedure matrix_load_indexed_coefficients_ff(ring: PolyRing, densecoef
         for j := 1:dv_length(rowexps) do
             putv(densecoeffs, getv(rowexps, j), getv(cfsref, j))
     >>;
-
-%--------------------------------------------------------------------------------------------------
 
 asserted procedure matrix_reduce_dense_row_by_known_pivots_sparse(ring: PolyRing, densecoeffs: Vector, 
                         matrixj: MacaulayMatrix, basis: Basis, pivs: Vector, startcol: ColumnIdx,
@@ -345,12 +333,10 @@ asserted procedure matrix_reduce_dense_row_by_known_pivots_sparse(ring: PolyRing
         return {nil, newrow, newcfs}
     end;
 
-%--------------------------------------------------------------------------------------------------
-
 asserted procedure matrix_exact_sparse_rref(ring: PolyRing, matrixj: MacaulayMatrix, basis: Basis);
     begin scalar ncols, nlow, nright, nleft, uprows, lowrows, low2coef, up2coef, pivs, l2c_tmp,
                     rowidx2coef, upivs, densecoeffs, bcoeffs, rowexps, cfsref, startcol, 
-                    result, zeroed, newrow, newcfs, mcoeffs, newpivs, k;
+                    zeroed, newrow, newcfs, mcoeffs, newpivs, k;
         ncols := matrix_mget_ncols(matrixj);
         nlow := matrix_mget_nlow(matrixj);
         nright := matrix_mget_nright(matrixj);
@@ -424,11 +410,6 @@ asserted procedure matrix_exact_sparse_rref(ring: PolyRing, matrixj: MacaulayMat
                 matrix_normalize_sparse_row(ring, getv(mcoeffs, i))
             >>
         >>;
-        
-        if !*f4debug then <<
-            prin2t {"exact_sparse_rref: lower part reduced:", matrixj};
-            prin2t {"exact_sparse_rref: pivs:", pivs}
-        >>;
 
         % number of new pivots
         newpivs := 0;
@@ -482,12 +463,10 @@ asserted procedure matrix_linear_algebra(ring: PolyRing, matrixj: MacaulayMatrix
         matrix_exact_sparse_rref(ring, matrixj, basis)
     end;
 
-%--------------------------------------------------------------------------------------------------
-
 asserted procedure matrix_exact_sparse_rref_nf(ring: PolyRing, matrixj: MacaulayMatrix, tobereduced: Basis, basis: Basis);
     begin scalar ncols, nlow, nright, nleft, uprows, lowrows, low2coef, up2coef, pivs, l2c_tmp,
-                    rowidx2coef, upivs, densecoeffs, bcoeffs, rowexps, cfsref, startcol, 
-                    result, zeroed, newrow, newcfs, mcoeffs, newpivs, k;
+                    rowidx2coef, upivs, densecoeffs, rowexps, cfsref, startcol, 
+                    zeroed, newrow, newcfs, mcoeffs, k;
         ncols := matrix_mget_ncols(matrixj);
         nlow := matrix_mget_nlow(matrixj);
         nright := matrix_mget_nright(matrixj);
@@ -572,12 +551,10 @@ asserted procedure matrix_linear_algebra_nf(ring: PolyRing, matrixj: MacaulayMat
         matrix_exact_sparse_rref_nf(ring, matrixj, tobereduced, basis)
     end;
 
-%--------------------------------------------------------------------------------------------------
-
 asserted procedure matrix_linear_algebra_isgroebner(ring: PolyRing, matrixj: MacaulayMatrix, basis: Basis): Boolean;
     begin scalar ncols, nlow, nright, nleft, uprows, lowrows, low2coef, up2coef, pivs, l2c_tmp,
                     rowidx2coef, upivs, densecoeffs, bcoeffs, rowexps, cfsref, startcol, 
-                    result, zeroed, newrow, newcfs, mcoeffs, newpivs, k;
+                    result, zeroed, newrow, newcfs, k;
         result := t;
         
         ncols := matrix_mget_ncols(matrixj);
@@ -646,8 +623,6 @@ asserted procedure matrix_linear_algebra_isgroebner(ring: PolyRing, matrixj: Mac
         return result
     end;
 
-%--------------------------------------------------------------------------------------------------
-
 asserted procedure matrix_interreduce_matrix_rows(ring: PolyRing, matrixj: MacaulayMatrix, basis: Basis);
     begin scalar pivs, densecfs, uprows, lowrows, low2coef, up2coef, coeffs, k,
                     l, cfs, reducexps, startcol, zeroes, newrow, newcfs;
@@ -665,10 +640,6 @@ asserted procedure matrix_interreduce_matrix_rows(ring: PolyRing, matrixj: Macau
         up2coef := matrix_mget_up2coef(matrixj);
         coeffs := matrix_mget_coeffs(matrixj);
 
-        % prin2t {"In interreduce"};
-        % prin2t {"Matrix", matrixj};
-        % prin2t {"Basis", basis};
-
         % same pivs as for rref
         % pivs: column idx --> vector of present columns
         pivs := dv_undef(matrix_mget_ncols(matrixj));
@@ -681,9 +652,6 @@ asserted procedure matrix_interreduce_matrix_rows(ring: PolyRing, matrixj: Macau
         densecfs := matrix_zero_coeff_vector(ring, matrix_mget_ncols(matrixj));
 
         k := matrix_mget_nrows(matrixj);
-
-        % prin2t "uwu";
-
         for i := 1:matrix_mget_ncols(matrixj) do <<
             l := matrix_mget_ncols(matrixj) - i + 1;
             if not (null getv(pivs, l)) then <<
@@ -695,10 +663,6 @@ asserted procedure matrix_interreduce_matrix_rows(ring: PolyRing, matrixj: Macau
                 for j := 1:dv_length(reducexps) do
                     putv(densecfs, getv(reducexps, j), getv(cfs, j));
 
-                % prin2t {"Reducting, i =", i};
-                % prin2t {"densecfs = ", densecfs};
-                % prin2t {"pivs = ", pivs};
-                % prin2t {"l = ", l};
                 {zeroes, newrow, newcfs} := matrix_reduce_dense_row_by_known_pivots_sparse(ring, densecfs, matrixj, basis, pivs, l, l, nil);
 
                 putv(lowrows, k, newrow);
@@ -714,8 +678,6 @@ asserted procedure matrix_interreduce_matrix_rows(ring: PolyRing, matrixj: Macau
         matrix_mset_npivots(matrixj, matrix_mget_nrows(matrixj))
     end;
 
-%--------------------------------------------------------------------------------------------------
-
 asserted procedure matrix_convert_hashes_to_columns(matrixj: MacaulayMatrix, 
                             symbol_ht: MonomialHashtable);
     begin scalar hdata, loadj, col2hash, j, k, nterms, uprows, row,
@@ -726,11 +688,6 @@ asserted procedure matrix_convert_hashes_to_columns(matrixj: MacaulayMatrix,
 
         % monoms from symbolic table represent one column in the matrixj
         
-        if !*f4debug then <<
-            prin2t {"convert_hashes_to_columns: matrix", matrixj};
-            prin2t {"convert_hashes_to_columns: symbol_ht", symbol_ht}
-        >>;
-
         col2hash := dv_undef(loadj - 1);
         j := 1;
         % number of pivotal cols
@@ -747,10 +704,6 @@ asserted procedure matrix_convert_hashes_to_columns(matrixj: MacaulayMatrix,
 
         % sort columns
         sorting_sort_columns_by_hash(col2hash, symbol_ht);
-        
-        if !*f4debug then <<
-            prin2t {"convert_hashes_to_columns: sorted by hash", col2hash}
-        >>;
 
         matrix_mset_nleft(matrixj, k);
         % -1 as long as hashtable loadj is always 1 more than actual
@@ -789,8 +742,6 @@ asserted procedure matrix_convert_hashes_to_columns(matrixj: MacaulayMatrix,
         matrix_mset_col2hash(matrixj, col2hash)
     end;
 
-%--------------------------------------------------------------------------------------------------
-
 asserted procedure matrix_convert_matrix_rows_to_basis_elements(matrixj: MacaulayMatrix, 
                             basis: Basis, ht: MonomialHashtable, symbol_ht: MonomialHashtable);
     begin scalar rows, crs, bcoeffs, bgens, mcoeffs, low2coef, colidx;
@@ -818,11 +769,9 @@ asserted procedure matrix_convert_matrix_rows_to_basis_elements(matrixj: Macaula
         basis_bset_ntotal(basis, basis_bget_ntotal(basis) + matrix_mget_npivots(matrixj))
     end;
 
-%--------------------------------------------------------------------------------------------------
-
 asserted procedure matrix_convert_nf_rows_to_basis_elements(matrixj: MacaulayMatrix, 
                             basis: Basis, ht: MonomialHashtable, symbol_ht: MonomialHashtable);
-    begin scalar rows, crs, bcoeffs, bgens, mcoeffs, low2coef, colidx, row;
+    begin scalar bcoeffs, bgens, mcoeffs, low2coef, colidx, row;
         
         basis_check_enlarge_basis(basis, matrix_mget_npivots(matrixj));
         
@@ -851,8 +800,6 @@ asserted procedure matrix_convert_nf_rows_to_basis_elements(matrixj: MacaulayMat
             >>
         >>
     end;
-
-%--------------------------------------------------------------------------------------------------
 
 endmodule; % end of matrixj module
 

@@ -1,8 +1,8 @@
 module f4correctness;
+% Checking correctness of Groebner basis over rationals
 
 asserted procedure correctness_correctness_check(coeffaccum, primetracker, ring, exps, coeffs, coeffs_zz, gens_temp_ff, gb_ff, ht): Boolean;
     begin
-        
         % first we check coefficients only
         if not correctness_heuristic_correctness_check(coeffs_caget_gb_coeffs_qq(coeffaccum), lucky_ptget_modulo(primetracker)) then
             return nil;
@@ -61,17 +61,7 @@ asserted procedure correctness_randomized_correctness_check(coeffaccum, ring, co
         gb_ff_copy := basis_copy_basis_thorough(gb_ff);
         coeffs_reduce_modulo(gb_coeffs_zz, basis_bget_coeffs(gb_ff_copy), goodprime);
         groebner_cleanup_gens(ring, gb_ff_copy, goodprime);
-
-        % prin2t {"Prime in correctness:", goodprime};
-
-        % prin2t {"Before normal form:"};
-        % prin2t {"\tRing:", ring};
-        % prin2t {"\tGens:", gens_ff_copy};
-        % prin2t {"\tGB:", gb_ff_copy};
-
         normalform_normal_form_f4(ring, gb_ff_copy, ht, gens_ff_copy);
-
-        % prin2t {"After normal form:", gens_ff_copy};
 
         for i := 1:basis_bget_ndone(gens_ff_copy) do <<
             if not dv_isempty(getv(basis_bget_coeffs(gens_ff_copy), i)) then <<

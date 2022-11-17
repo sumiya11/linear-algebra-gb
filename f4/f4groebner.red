@@ -1,14 +1,11 @@
 module f4groebner;
 % Groebner basis computation. Contains a wrapper for f4 algorithm
 
-%--------------------------------------------------------------------------------------------------
-
 % Select the optimal size of hashtable
 asserted procedure groebner_select_tablesize(ring: PolyRing, exps: Vector): Integer;
     begin scalar nvars;
-        % Julia: for now, we want only 2^14 elements for debugging purposes
         nvars := io_prget_nvars(ring);
-        return 2^14  % 2^10 - 2^16 in Julia
+        return 2^15
     end;
 
 asserted procedure groebner_cleanup_gens(ring, gens_ff, prime);
@@ -17,12 +14,10 @@ asserted procedure groebner_cleanup_gens(ring, gens_ff, prime);
         basis_normalize_basis(ring, gens_ff)
     >>;
 
-%--------------------------------------------------------------------------------------------------
-
 % Computes the Groebner basis.
-%   . ring - a polynomial ring 
-%   . exps - a list of polynomials' terms (not hashed)
-%   . coeffs - a list of polynomials' coefficients
+%   . ring - polynomial ring (see f4io.red),
+%   . exps - list of polynomials' terms,
+%   . coeffs - a list of polynomials' coefficients.
 asserted procedure groebner_groebner1(ring: PolyRing, exps: Vector, coeffs: Vector): DottedPair;
     begin scalar tablesize, basis, ht, gbexps;
         
@@ -41,7 +36,7 @@ asserted procedure groebner_groebner1(ring: PolyRing, exps: Vector, coeffs: Vect
 asserted procedure groebner_groebner2(ring: PolyRing, exps: Vector, coeffs: Vector): DottedPair;
     begin scalar tablesize, gens_temp_ff, ht, coeffaccum, correct,
                 coeffs_zz, primetracker, i, gens_ff, prime, gap,
-                primegaps, primemult, gb_exps;
+                primegaps, primemult, gb_exps, success;
         
         % select hashtable size
         tablesize := groebner_select_tablesize(ring, exps);
@@ -65,14 +60,10 @@ asserted procedure groebner_groebner2(ring: PolyRing, exps: Vector, coeffs: Vect
 
         i := 1;
 
-        % prin2t {"i = ", i};
-
         % copy basis so that we initial exponents dont get lost
         gens_ff := basis_copy_basis_thorough(gens_temp_ff);
 
         prime := lucky_nextluckyprime(primetracker);
-
-        % prin2t {"prime = ", prime};
 
         % perform reduction and store result in gens_ff
         coeffs_reduce_modulo(coeffs_zz, basis_bget_coeffs(gens_ff), prime);
@@ -89,9 +80,9 @@ asserted procedure groebner_groebner2(ring: PolyRing, exps: Vector, coeffs: Vect
         coeffs_reconstruct_crt(coeffaccum, primetracker, basis_bget_coeffs(gens_ff), prime);
 
         % reconstruct into rationals
-        coeffs_reconstruct_modulo(coeffaccum, primetracker);
+        success := coeffs_reconstruct_modulo(coeffaccum, primetracker);
 
-        if correctness_correctness_check(coeffaccum, primetracker, ring, exps, coeffs, coeffs_zz, gens_temp_ff, gens_ff, ht) then
+        if success and correctness_correctness_check(coeffaccum, primetracker, ring, exps, coeffs, coeffs_zz, gens_temp_ff, gens_ff, ht) then
             correct := t;
 
         gap := 1;
@@ -108,8 +99,6 @@ asserted procedure groebner_groebner2(ring: PolyRing, exps: Vector, coeffs: Vect
             for j := 1:gap do <<
                 i := i + 1;
                 
-                prin2t {"i = ", i};
-
                 % copy basis so that initial exponents dont get lost
                 gens_ff := basis_copy_basis_thorough(gens_temp_ff);
                 prime := lucky_nextluckyprime(primetracker);
@@ -125,9 +114,9 @@ asserted procedure groebner_groebner2(ring: PolyRing, exps: Vector, coeffs: Vect
             >>;
             
             % reconstruct into rationals
-            coeffs_reconstruct_modulo(coeffaccum, primetracker);
+            success := coeffs_reconstruct_modulo(coeffaccum, primetracker);
 
-            if correctness_correctness_check(coeffaccum, primetracker, ring, exps, coeffs, coeffs_zz, gens_temp_ff, gens_ff, ht) then
+            if success and correctness_correctness_check(coeffaccum, primetracker, ring, exps, coeffs, coeffs_zz, gens_temp_ff, gens_ff, ht) then
                 correct := t
         >>;
 

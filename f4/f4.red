@@ -1,18 +1,10 @@
 module f4;
 % f4. Main module. The F4 algorithm for computing Groebner bases.
-% Contains the AM entry point.
+% Contains the AM entryss point.
 
-% This package is migrated from Julia package Groebner.jl.
-% Groebner.jl is maintained by Gowda S. and Demin A. 
+% This package is migrated from the Julia package Groebner.jl.
+% Groebner.jl is maintained by Gowda S. and Demin A
 %   https://github.com/sumiya11/Groebner.jl/
-
-% DEVELOPER NOTE:
-% Anywhere in this package sources, comments that start with the word "Julia"
-% explain some of our design decisions during the migration of the package to Reduce.
-
-% DEVELOPER NOTE [examples]:
-% f4();
-%
 
 % The f4 module provides the implementation of the Faugere's F4 algorithm
 %   https://doi.org/10.1016/S0022-4049(99)00005-5
@@ -20,37 +12,42 @@ module f4;
 % The interface contains the operator `f4` with the following signature
 %     `f4(polynomials: List, vars: List, sortmode: Any)`
 % Where 
-%   . `polynomials` is a list of expressions, the ideal generators;
-%   . `vars` is a list of Reduce kernels, the polynomial ring variables;
-%   . `sortmode` is a sorting mode for monomial comparison ('lex, 'degrevlex)
+%   . `polynomials` is a list of expressions, the ideal generators,
+%   . `vars` is a list of Reduce kernels, the polynomial ring variables,
+%   . `sortmode` is a sorting mode for monomial comparison ('lex, 'degrevlex).
 % The `f4` function returns a list of expressions, which is the Groebner basis 
 % of the ideal; each list element is a Lisp Prefix.
 
-% Julia:
-%   The file f4.red mirrors the file interface.jl from the Julia implementation.
-%       (links are not stable)
-%       https://github.com/sumiya11/Groebner.jl/blob/master/src/interface.jl
-%   All other files have exactly same names as in the Julia implementation.
+% The file f4.red mirrors the file interface.jl from the Julia implementation.
+% (links may not be stable) https://github.com/sumiya11/Groebner.jl/blob/master/src/interface.jl
+% All other files have exactly same names as in the Julia implementation
+% with the prefix `f4`.
 
-% Julia:
-%   In Reduce, function names are formed as follows:
-%   the file name + the Julia name of the function
+% In Reduce, function names are formed as follows:
+% the Julia file name + the Julia name of the function
 %
-%   So that Julia function "insert_in_hash_table" from the file "hashtable"
-%   has name "hashtable_insert_in_hash_table" in Reduce and is 
-%   defined in the file "f4hashtable.red".
+% So that Julia function "insert_in_hash_table" from the file "hashtable"
+% has name "hashtable_insert_in_hash_table" in Reduce and is 
+% defined in the file "f4hashtable.red".
 
-%--------------------------------------------------------------------------------------------------
-
-% . f4 - this file, contains package AM entry point with a single function `f4`;
-% . groebner - high-level Groebner basis computation; calls to f4 as its backend;
-% . f4 - low-level f4 implementation, the heart of the package;
-% . hashtable - MonomialHashtable struct and related functions implementation;
-% . basis - Pairset and Basis structs implementations, as well as some related functions;
-% . matrix - MacaulayMatrix struct implementation; contains linear-algebra-style reduction;
-% . internaltypes - type declarations (have no practical effect in Reduce, 
-%                   but are left for consistency with Julia implementation)
-% . io - input-output conversions of polynomial representations
+% Files in this package:
+% . f4.red - this file; contains package AM entry point with a single function `f4`;
+% . f4basis.red - Pairset and Basis structs implementations, as well as some related functions;
+% . f4coeffs.red - manipulations with basis coefficients (reduction modulo / reconstruction);
+% . f4constants.red - some hacks to detect the largest possible modulo;
+% . f4correctness.red - checking correctness in rational number groebner computation;
+% . f4dv.red - dynamically-resized vector implementation;
+% . f4f4.red - low-level f4 implementation, the heart of the package;
+% . f4groebner.red - high-level Groebner bases over QQ and Zp; calls to f4 over Zp as its backend;
+% . f4hashtable.red - MonomialHashtable struct and related functions implementation;
+% . f4io.red - input-output conversions of polynomial representations;
+% . f4isgroebner.red - checking that something is a groebner basis;
+% . f4lucky.red - lucky prime numbers;
+% . f4matrix.red - MacaulayMatrix struct implementation; implements linear-algebra-style reduction;
+% . f4modular.red - rational number and crt reconstructions;
+% . f4normalform.red - normal form computation;
+% . f4poly.red - distributive polynomial implementation;
+% . f4sorting.red - exponent vector comparators and sorting methods.
 create!-package('(f4 f4groebner f4f4 f4hashtable f4basis f4matrix f4sorting f4io f4poly f4dv f4lucky f4coeffs f4correctness f4modular f4normalform f4isgroebner f4constants), nil);
 
 loadtime load!-package 'vector88;
@@ -66,52 +63,50 @@ off1 'assert_inline_procedures;
 off1 'assertinstall;
 off1 'evalassert;
 
-% from f5io.red
-struct PolyRing;
+% from f4io.red
+struct PolyRing checked by vectorp;
 
-% from basis.red
-struct SPair;
-struct Basis;
-struct Pairset;
+% from f4basis.red
+struct SPair checked by vectorp;
+struct Basis checked by vectorp;
+struct Pairset checked by vectorp;
 
-% from hashtable.red
-struct Hashvalue;
-struct MonomialHashtable;
+% from f4hashtable.red
+struct Hashvalue checked by vectorp;
+struct MonomialHashtable checked by vectorp;
 
-
-% from matrix.red
-struct MacaulayMatrix;
+% from f4matrix.red
+struct MacaulayMatrix checked by vectorp;
 
 % All supported coefficient types in F4
-struct Coeff; % checked by listp;
+procedure f4_isCoeff(x); sqp(x) or integerp(x);
+struct Coeff checked by f4_isCoeff;
 
 % Polynomial monomial exponent vector type
-struct ExponentVector; % = Vector{UInt16}
+struct ExponentVector checked by vectorp;
 % The type of entry of an exponent vector
-struct Degree; % = eltype(ExponentVector)
+struct Degree checked by integerp;
 
-struct ExponentIdx; % = Int32
+struct ExponentIdx checked by integerp;
 
-
-struct DivisionMask; % = UInt32
+struct DivisionMask checked by integerp;
 
 % Hash of exponent vector
-struct ExponentHash; %  = UInt32
+struct ExponentHash checked by integerp;
 
 % MonomsVector of a zero polynomial is an empty `MonomsVector` object.
 % CoeffsVector of a zero polynomial is an empty `CoeffsVector` object.
-
-% Vector of polynomial monomials
-struct MonomsVector; % = Vector{ExponentIdx}
-% Vector of polynomial coefficients
-struct CoeffsVector; % = Vector{Coeff}
+% Vector of polynomial monomials.
+struct MonomsVector checked by vectorp; 
+% Vector of polynomial coefficients.
+struct CoeffsVector checked by vectorp; 
 
 % Column index of a matrix
-struct ColumnIdx; % = Int32
+struct ColumnIdx checked by integerp;
 
-struct PrimeTracker;
+struct PrimeTracker checked by vectorp;
 
-struct CoeffAccum;
+struct CoeffAccum checked by vectorp;
 
 fluid '(!*backtrace);
 fluid '(f4_largest!-small!-prime!* 
@@ -121,7 +116,7 @@ fluid '(f4_largest!-small!-prime!*
 % prints debug info during execution of f4
 switch f4debug=off;
 
-% Uses modular lifting internally
+% Uses modular lifting with f4
 switch f4modular=on;
 
 on1 'roundbf;
@@ -136,7 +131,7 @@ f4_sizeofInt32!* := 32;
 asserted procedure f4_getvlast(x);
     getv(x, dv_length(x));
 
-% Julia: convert list `x` to vector and return it
+% Julia: convert list `x` to a dynamic vector and return it
 asserted procedure f4_list2vector(x: List): Vector;
     begin scalar len, v;
         len := length(x);
@@ -145,8 +140,6 @@ asserted procedure f4_list2vector(x: List): Vector;
             putv(v, i, pop(x));
         return v
     end;
-
-%--------------------------------------------------------------------------------------------------
 
 put('f4, 'psopfn, 'f4_groebner);
 
@@ -220,9 +213,6 @@ asserted procedure f4_argumentError();
 
           > f4({x*y + 1, y*z + 1}, {x, y, z}, lex);";
 
-%--------------------------------------------------------------------------------------------------
-
 endmodule; % end of f4 module
 
 end;
-

@@ -1,0 +1,43 @@
+% trinks system in lex
+% characteristic 0
+
+load_package f5;
+
+Usage: profile p_1, ..., p_n;           profile expr procedures p_1, ..., p_n
+       unprofile p_1, ..., p_n;         stop profiling p_1, ..., p_n
+       proprint([p_1,..., p_n | all]);  print collected data in tables
+       proall();                        list all profiled procedures
+       pronested();                     list procedures with nested calls
+       proreset();                      delete all collected data
+       prousage();                      this information
+*** (core_interreduceinput): base 16#14D3120, length 10#109 bytes
+*** (core_normalform): base 16#14D3200, length 10#76 bytes
+*** (core_topreductionf5): base 16#14D32B0, length 10#76 bytes
+
+
+system := {35*p + 40*z + 25*t - 27*s,
+          45*p + 35*s - 165*b - 36*h,
+          -11*s*b + 3b^2 + 99*w*h,
+          25*p*s - 165*b^2 + 15*w*h + 30*z*h - 18*t*h,
+          15*p*t + 20*z*s - 9*w*h,
+          -11*b^3 + w*p*h + 2*z*t*h}$
+
+
+
+vars := {w,p,z,t,s,b,h}$
+
+
+
+gb := f5(system, vars, 'revgradlex)$
+
+
+torder(vars, lex)$
+
+
+
+gb := f5(system)$
+
+
+
+end;
+

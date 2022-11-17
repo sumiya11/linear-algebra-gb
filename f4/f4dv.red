@@ -1,8 +1,7 @@
 module f4dv;
-% Dynamic Vector.
-% Implements DynamicVector interface.
+% Dynamic Vector. Implements dynamic vector interface.
 
-struct DynamicVector;
+struct DynamicVector checked by vectorp;
 
 % Julia:
 %   In julia array indexing is 1-based vs. Reduce 0-based.
@@ -22,7 +21,6 @@ asserted procedure dv_undef(n: Integer): DynamicVector;
 asserted procedure dv_length(v: DynamicVector): Integer;
     upbv(v);
 
-%
 asserted procedure dv_isempty(v: DynamicVector): Boolean;
     dv_length(v) = 0;
 

@@ -146,8 +146,6 @@ procedure ev_2aExp1(u,v);
    else
       {'expt,car v,car u} . ev_2aExp1(cdr u,cdr v);
 
-%--------------------------------------------------------------------------------------------------
-
 % Returns the identity Term (just one).
 asserted inline procedure poly_identityTerm(): Term;
    poly_zeroExp();
@@ -187,8 +185,6 @@ asserted inline procedure poly_disjTerm!?(a: Term, b: Term): Boolean;
 % Checks if a = b
 asserted inline procedure poly_eqTerm!?(a: Term, b: Term): Boolean;
    poly_eqExp!?(a, b);
-
-%--------------------------------------------------------------------------------------------------
 
 asserted procedure poly_cmpExpLex(e1: List, e2: List): Boolean;
    <<
@@ -230,8 +226,6 @@ asserted inline procedure poly_tdegCmpExp(e1: List, e2: List): Boolean;
 asserted inline procedure poly_eqExp!?(e1: List, e2: List): Boolean;
    e1 = e2;
 
-%--------------------------------------------------------------------------------------------------
-
 % Constructor of Polynomial, forms a Polynomial
 % from a list of `Term`s, a list of `Coeff`s, and a sugar degree.
 asserted procedure poly_PolynomialWithSugar(ts: Terms, cfs: Coeffs, sugar: Integer): Polynomial;
@@ -247,8 +241,6 @@ asserted procedure poly_zero(): Polynomial;
 
 asserted procedure poly_iszero!?(p: Polynomial): Boolean;
    null poly_getTerms(p);
-
-%--------------------------------------------------------------------------------------------------
 
 % Returns the tail of the polynomial `poly`.
 % That is, `poly - lead(poly)`,
@@ -327,8 +319,6 @@ asserted inline procedure poly_invCoeff(a: Coeff): Coeff;
       % ASSERT(not null numr a);
       denr(a) ./ numr(a)
    >>;
-
-%--------------------------------------------------------------------------------------------------
 
 % Returns s = fmult*f - fcoeff*gmult*g
 %
@@ -472,8 +462,6 @@ asserted procedure poly_multCoeffs(poly: Polynomial, cf: Coeff): Polynomial;
          poly_getSugar(poly)
       );
 
-%--------------------------------------------------------------------------------------------------
-
 asserted inline procedure poly_sumPoly(f: Polynomial, g: Polynomial): Polynomial;
    if poly_iszero!?(f) then
       g
@@ -482,8 +470,6 @@ asserted inline procedure poly_sumPoly(f: Polynomial, g: Polynomial): Polynomial
    else 
       poly_paircomb(f, poly_identityTerm(), poly_negCoeff(poly_oneCoeff()),
                      g, poly_identityTerm(), poly_oneCoeff());
-
-%--------------------------------------------------------------------------------------------------
 
 % Constructs a Polynomial from a SF `u`
 asserted inline procedure poly_sf2poly(u: SF): Polynomial;
