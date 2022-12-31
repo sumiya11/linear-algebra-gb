@@ -13,9 +13,9 @@
 \begin{document}
 \title{F4: Computing Gröbner Bases Using F4}
 
-\author{Alexander Demin, Hamid Rahkooy\\
+\author{Alexander Demin\footnote{Corresponding author, email: \texttt{asdemin\_2@edu.hse.ru}}, Hamid Rahkooy\\
   MPI Informatics, Saarland Informatics Campus, Germany\\
-  \texttt{\{ademin,hrahkooy\}@mpi-inf.mpg.de}
+  \texttt{hrahkooy@mpi-inf.mpg.de}
   \and
   Thomas Sturm\\
   CNRS, Inria, and the University of Lorraine, France\\
@@ -29,16 +29,19 @@
 \section{Introduction}
 
 F4 is a package for the computation of \grobner{} Bases over rational numbers
-using \faugere{}'s F4 algorithm \cite{f4}. It is compatible with existing REDUCE term
+using \faugere{}'s F4 algorithm \cite{F4}. It is compatible with existing REDUCE term
 orderings, as used with the GROEBNER package and the CGB package. Some package usage examples are
 presented in Section~\ref{SE:usage} and in the package test file
 \code{f4.tst}.
 
-The F4 algorithm settled in the core of \grobner{} bases computation routines in leading 
-computer algebra systems. The efficiency of F4 comes from employing Gaussian elimination
-for polynomial reductions, which allows the use of highly optimized linear algebra kernels.
+The F4 algorithm is highly popular among practitioners. It settled in the core of \grobner{} bases
+computation routines in leading computer algebra systems. The efficiency of F4 partly comes from 
+employing Gaussian elimination for polynomial reductions, 
+which allows the use of highly optimized linear algebra kernels in the implementation.
 
-This package is migrated from the Julia package Groebner.jl.
+This package is migrated from the Julia package Groebner.jl. 
+The implementation utilizes several modern symbolic computation techniques, 
+such as monomial hashtables, monomial divisibility masks, and specialized row-reduction algorithms.
 
 \section{Package Usage}\label{SE:usage}
 
@@ -82,10 +85,8 @@ Variables and sort mode can be globally specified using the command
 Using the optional arguments of \code{f4} shadows the current global
 setting. Note that graded term orders like
 \code{gradlex} and \code{revgradlex} tend to be the fastest for \grobner{}
-basis computations \cite[\S5]{tolstaya}.
-
-The coefficient field is the field of rational numbers. 
-By default, F4 inter-reduces the resulting basis, which makes it unique wrt.~the chosen term order.
+basis computations \cite[\S5]{tolstaya}. By default, F4 inter-reduces the resulting basis, 
+which makes it unique wrt.~the chosen term order.
 %
 \paragraph{Example}
 On input of
@@ -97,7 +98,7 @@ On input of
 3: f4({x*y + 1, y*z + 1});
 \end{verbatim}
 we obtain the \grobner{} basis
-\code{\{x - z, y*z + 1\}} using lexicographic order with $\code{x} \succ
+\code{\{y*z + 1, x - z\}} using lexicographic order with $\code{x} \succ
 \code{y} \succ \code{z}$. A subsequent call
 \begin{verbatim}
 4: f4({x*y + 1, y*z + 1}, {z, y, x}, lex);
@@ -105,14 +106,14 @@ we obtain the \grobner{} basis
 with optional arguments shadows our \code{torder} setting above in favor of $
 \code{z}
 \succ \code{y} \succ \code{x}$. We then obtain the \grobner{} basis
-\code{\{z - x, y*x + 1\}}.
+\code{\{y*x + 1,z - x\}}.
 %
 \section{Switches}
 \label{SE:switches}
 
 \begin{description}
 \item[\code{f4modular:}] Default is \code{on}. If set \code{on}, use modular algorithms
-during computation. This only improves performance and does not affect the final result. 
+during computation. This only improves performance and does not affect the final result.
 \end{description}
 
 \section{Symbolic Mode Interface}
@@ -128,7 +129,7 @@ value is the old setting.
 There are three alternative symbolic mode entry points for \grobner{} basis computation, depending
 on the syntax of input and output polynomials:
 \begin{description}
-\item[\code{f4\_groebnera(\{expr\_1, \ldots, expr\_m\}):}] \code{expr\_1}, \dots, \code{expr\_m} are
+\item[\code{f4\_groebnerp(\{expr\_1, \ldots, expr\_m\}):}] \code{expr\_1}, \dots, \code{expr\_m} are
 Lisp Prefix Forms. The return value is a list of polynomials as Lisp Prefix Forms, which are ordered
 with respect to the chosen term order.
 %
@@ -146,6 +147,30 @@ polynomials as Standard Quotients. The return value is a list
 of polynomials as Standard Quotients, which are ordered with respect to the current REDUCE kernel
 order. Note that the information on the term order gets lost here.
 \end{description}
+%
+\section{Concluding remarks}
+
+During the package implementation and benchmarking stage we have observed several features of REDUCE 
+(in particular, in comparison to Julia) that we would like to outline here:
+%
+\begin{description}
+	\item REDUCE Standard Quotient implementation of rational numbers is competitive to GNU GMP \cite{GMP}
+	on the most of our benchmarks.
+	Still, expression swell occurring in F4 matrices is too severe to forgo modular computations;
+	%
+	\item The best strategy for Gr{\"o}ebner bases modular computation usually is 
+	to pick the largest possible ``register size'' moduli. The portability of REDUCE imposes 
+	a hard limit on the maximal size of an unboxed integer, which might complicate selection 
+	of large enough moduli for efficient arithmetic modulo a prime.
+	In our implementation, we select the size of the moduli dynamically based on 
+	the platform we are running on.
+	% 
+	\item The fact that REDUCE package needs to support a multitude of 
+	possible LISP implementations might cap the effectiveness of manual 
+	low-level code optimization. While Julia version of this package benefits 
+	from vectorization and permits unsafe and fast memory manipulations, 
+	REDUCE must operate on a higher and safer level of abstraction.
+\end{description}
 
 \begin{thebibliography}{BWK93}
 
@@ -155,27 +180,19 @@ Thomas Becker, Volker Weispfenning, and Hainz Kredel.
   Mathematics}.
 \newblock Springer, 1993.
 
-\bibitem[EF17]{survey}
-Christian Eder and Jean-Charles Faugère.
-\newblock A survey on signature-based algorithms for computing {G}röbner
-  bases.
-\newblock {\em J. Symb. Comput.}, 80:719--784, 2017.
+\bibitem[G12]{GMP}
+Torbj{\"o}rn Granlund and the GMP development team.
+\newblock GNU MP: The GNU Multiple Precision Arithmetic Library.
+\newblock \emph{http://gmplib.org/}, 2012
 
-\bibitem[EP10]{f5c}
-Christian Eder and John Perry.
-\newblock {F5C}: A variant of {F}aug{\`{e}}re's {F5} algorithm with reduced
-  {G}r{\"o}bner bases.
-\newblock {\em J. Symb. Comput.}, 45(12):1442--1458, 2010.
-
-\bibitem[Fau02]{f5}
+\bibitem[F99]{F4}
 Jean~Charles Faugère.
-\newblock A new efficient algorithm for computing {G}röbner bases without
-  reduction to zero ($\textrm{{F}}_5$).
-\newblock In {\em Proc. ISSAC 2002}, pages 75--83. ACM, 2002.
+\newblock {A} new efficient algorithm for computing {G}r{\"o}bner bases ({F}4).
+\newblock {\em Journal of Pure and Applied Algebra}, vol. 139(1), pages 61--88., 1999.
 
 \end{thebibliography}
 
-% \bibliography{f5}
-% \bibliographystyle{alpha}
+%\bibliography{f4}
+%\bibliographystyle{alpha}
 
 \end{document}
