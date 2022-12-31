@@ -1,12 +1,44 @@
 module f4hashtable;
 % Monomial hashtable implementation.
+% This file corresponds to file f4/hashtable.jl in Groebner.jl
 
-%   struct Hashvalue;
+revision('f4hashtable, "$Id$");
+
+copyright('f4hashtable, "(c) 2023 A. Demin, T. Sturm, MPI Informatics, Germany");
+
+% Redistribution and use in source and binary forms, with or without
+% modification, are permitted provided that the following conditions
+% are met:
 %
-%   stores hash of a monomial,
-%   corresponding divmask to speed up divisibility checks,
-%   index for position matrix (defaults to zero),
-%   and the todal degree 
+%    * Redistributions of source code must retain the relevant
+%      copyright notice, this list of conditions and the following
+%      disclaimer.
+%    * Redistributions in binary form must reproduce the above
+%      copyright notice, this list of conditions and the following
+%      disclaimer in the documentation and/or other materials provided
+%      with the distribution.
+%
+% THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+% "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+% LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+% A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+% OWNERS OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+% SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+% LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+% DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+% THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+% (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+% OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+%
+
+% struct Hashvalue;
+%
+% Hashvalues are stored in a hashtable (see below).
+% 
+% Hashvalue stores hash of a monomial,
+% corresponding divmask to speed up divisibility checks,
+% index for position matrix (defaults to zero),
+% and the todal degree.
 %
 % the struct is mutable, getters and setters are defined below
 asserted procedure hashtable_Hashvalue(
@@ -78,7 +110,8 @@ asserted procedure hashtable_copy_hashvalue(hv: Hashvalue): Hashvalue;
 % . ndivbits - bits per div variables
 % . size - total size (capacity) of hashtable
 % . loadj - number of elements added (always <= size)
-% . offset
+% . offset - the offset of the first meaningful element in the `exponents` vector.
+%            Always equals 2, at least for now.
 asserted procedure hashtable_MonomialHashtable(
                 exponents: Vector, hashtable: Vector, hashdata: Vector, 
                 hasher: Vector, nvars: Integer, explen: Integer, ord: Any, 
@@ -190,6 +223,7 @@ asserted procedure hashtable_htset_offset(ht: MonomialHashtable, x: Integer): In
     putv(ht, 14, x);
 
 % Julia: variable name "mod" changed to "modj"
+%
 % Returns the next look-up position in the table 
 % (that is, implementing open addressing with quadratic probing) 
 asserted procedure hashtable_hashnextindex(h: ExponentHash, j: ExponentHash, modj: ExponentHash): ExponentHash;
@@ -490,6 +524,7 @@ asserted procedure hashtable_fill_divmask(ht: MonomialHashtable);
 
     end;
 
+% For a given monomial `e` generates a division mask and return it.
 asserted procedure hashtable_generate_monomial_divmask(e: ExponentVector, ht: MonomialHashtable): DivisionMask;
     begin scalar divvars, divmap, ctr, res;
         divvars := hashtable_htget_divvars(ht);
@@ -509,7 +544,7 @@ asserted procedure hashtable_generate_monomial_divmask(e: ExponentVector, ht: Mo
         return res
     end;
 
-% h1 divisible by h2
+% Checks if monomial at index h1 is divisible by monomial at index h2
 asserted procedure hashtable_is_monom_divisible(h1: ExponentIdx, h2: ExponentIdx, ht: MonomialHashtable): Boolean;
     begin scalar htdata, e1, e2, result, htexps;
         htdata := hashtable_htget_hashdata(ht);
@@ -533,6 +568,7 @@ asserted procedure hashtable_is_monom_divisible(h1: ExponentIdx, h2: ExponentIdx
         return result
     end;
 
+% Checks if the gcd of monomials at index h1 and h2 is constant
 asserted procedure hashtable_is_gcd_const(h1: ExponentIdx, h2: ExponentIdx, ht: MonomialHashtable): Boolean;
     begin scalar htexps, e1, e2, result;
         htexps := hashtable_htget_exponents(ht);

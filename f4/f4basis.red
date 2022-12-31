@@ -1,5 +1,35 @@
 module f4basis;
-% Groebner basis and Pairset implementations.
+% SPair, Pairset, and Basis structs.
+% This file corresponds to file f4/basis.jl in Groebner.jl
+
+revision('f4basis, "$Id$");
+
+copyright('f4basis, "(c) 2023 A. Demin, T. Sturm, MPI Informatics, Germany");
+
+% Redistribution and use in source and binary forms, with or without
+% modification, are permitted provided that the following conditions
+% are met:
+%
+%    * Redistributions of source code must retain the relevant
+%      copyright notice, this list of conditions and the following
+%      disclaimer.
+%    * Redistributions in binary form must reproduce the above
+%      copyright notice, this list of conditions and the following
+%      disclaimer in the documentation and/or other materials provided
+%      with the distribution.
+%
+% THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+% "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+% LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+% A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+% OWNERS OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+% SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+% LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+% DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+% THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+% (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+% OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+%
 
 % struct SPair
 % 
@@ -10,7 +40,7 @@ module f4basis;
 %   lcm:   ExponentIdx
 %   deg:   Degree
 %
-% S-pair object is immutable, getters are defined below
+% S-pair object is immutable, and getters are defined below
 asserted procedure basis_SPair(poly1: Integer, poly2: Integer, 
                         lcmj: ExponentIdx, deg: Degree): SPair;
     begin scalar v;
@@ -36,12 +66,10 @@ asserted procedure basis_spget_deg(sp: SPair): Degree;
 
 % Pairset struct. 
 %
-% The structure to store the SPairs produced during the computation.
+% The structure that stores the SPairs produced during the computation.
 % Pairset is
 %   pairs: Vector{SPair}
 %   load:  Integer
-
-% load -> ld
 asserted procedure basis_Pairset(pairs: Vector, ld: Integer): Pairset;
     begin scalar v;
         v := dv_undef(2);
@@ -170,7 +198,7 @@ asserted procedure basis_bset_lead(b: Basis, x): Vector;
 asserted procedure basis_bset_nlead(b: Basis, x): Integer;
     putv(b, 9, x);
 
-% Core structure that stores basis generators and some additional info
+% Initialize Basis struct
 asserted procedure basis_initialize_basis(ring: PolyRing, ngens: Integer): Basis;
     begin scalar sz, ndone, ntotal, nlead, gens, coeffs, isred, nonred, lead;
         sz := ngens * 2;
@@ -186,6 +214,7 @@ asserted procedure basis_initialize_basis(ring: PolyRing, ngens: Integer): Basis
             ntotal, isred, nonred, lead, nlead)
     end;
 
+% Copy the given Basis struct
 asserted procedure basis_copy_basis_thorough(basis: Basis): Basis;
     begin scalar sz, gens, coeffs, bgens, bcoeffs, gensi, coeffsi,
                     isred, nonred, lead;
@@ -214,6 +243,8 @@ asserted procedure basis_copy_basis_thorough(basis: Basis): Basis;
                         basis_bget_ntotal(basis), isred, nonred, lead, basis_bget_nlead(basis))
     end;
 
+% Check if the given Basis has enough capacity store additionaly `added` elements
+% and resize the Basis to an appropriate size, if not
 asserted procedure basis_check_enlarge_basis(basis: Basis, added: Integer);
     begin scalar sz;
         if basis_bget_ndone(basis) + added >= basis_bget_size(basis) then <<
@@ -229,13 +260,14 @@ asserted procedure basis_check_enlarge_basis(basis: Basis, added: Integer);
     end;
 
 % Normalize each element of the input basis
-% by dividing it by leading coefficient
+% by dividing it by the leading coefficient.
 asserted procedure basis_normalize_basis(ring: PolyRing, basis: Basis): Basis;
     if io_prget_ch(ring) = 0 then
         basis_normalize_basis_qq(ring, basis)
     else
         basis_normalize_basis_ff(ring, basis);
 
+% Normalize each element of the input basis over Q
 asserted procedure basis_normalize_basis_qq(ring: PolyRing, basis: Basis): Basis;
     begin scalar cfs, mul, cfsi;
         cfs := basis_bget_coeffs(basis);
@@ -251,6 +283,7 @@ asserted procedure basis_normalize_basis_qq(ring: PolyRing, basis: Basis): Basis
         return basis
     end;
 
+% Normalize each element of the input basis over Z/Zp
 asserted procedure basis_normalize_basis_ff(ring: PolyRing, basis: Basis): Basis;
     begin scalar cfs, mul, cfsi, ch;
         cfs := basis_bget_coeffs(basis);
@@ -267,6 +300,10 @@ asserted procedure basis_normalize_basis_ff(ring: PolyRing, basis: Basis): Basis
         return basis
     end;
 
+% Given a basis struct that stores several polynomials,
+% constructs all possible critical pairs from these polynomials,
+% filters critical pairs by several criteria, 
+% and, finally, adds critical pairs to the given pairset 
 asserted procedure basis_update_pairset(
                         pairset: Pairset, basis: Basis, 
                         ht: MonomialHashtable, update_ht: MonomialHashtable, 
@@ -296,7 +333,6 @@ asserted procedure basis_update_pairset(
         >>;
 
         % traverse existing pairs
-        % Julia !!!BUG IN JULIA!!!
         for i := 1:pl-1 do <<
             psi := getv(ps, i);
             j := basis_spget_poly1(psi);
@@ -362,6 +398,9 @@ asserted procedure basis_update_pairset(
                     putv(isred, getv(nonred, i), 1)
     end;
 
+% Updates meta-info in the given basis. That is, updates:
+%  - information about which elements are redundant,
+%  - division mask
 asserted procedure basis_update_basis(basis: Basis, ht: MonomialHashtable, update_ht: MonomialHashtable);
     begin scalar k, lead, nonred, isred, htdata, gens;
 
@@ -392,7 +431,8 @@ asserted procedure basis_update_basis(basis: Basis, ht: MonomialHashtable, updat
         basis_bset_ndone(basis, basis_bget_ntotal(basis))
     end;
 
-% checks if element of basis at position idx is redundant
+% Checks if element of the given basis at position `idx` is redundant
+% for Groebner basis computation
 asserted procedure basis_is_redundant(pairset: Pairset, basis: Basis, 
                         ht: MonomialHashtable, update_ht: MonomialHashtable, 
                         idx: Integer);
@@ -438,6 +478,8 @@ asserted procedure basis_is_redundant(pairset: Pairset, basis: Basis,
         return result
     end;
 
+% Updates the given pairset and basis structs by applying
+% `basis_update_basis` and `basis_update_pairset`
 asserted procedure basis_update(pairset: Pairset, basis: Basis, 
                         ht: MonomialHashtable, update_ht: MonomialHashtable, 
                         plcm: Vector): Vector;
@@ -477,6 +519,9 @@ asserted procedure basis_update(pairset: Pairset, basis: Basis,
         return plcm
     end;
 
+% Given vectors of polynomials (as their exponents and coefficients),
+% adds all occurring monomials to the given monomial hashtable
+% and adds polynomials to the basis
 asserted procedure basis_fill_data(basis: Basis, ht: MonomialHashtable, 
                                     exponents: Vector, coeffs: Vector);
     begin scalar ngens, htexps, bcoeffs, bgens, etmp, nterms, poly;
@@ -504,6 +549,9 @@ asserted procedure basis_fill_data(basis: Basis, ht: MonomialHashtable,
         basis_bset_ntotal(basis, ngens)
     end;
 
+% Moves polynomials in the given basis, so that 
+% non-redundant polynomials come first,
+% redundant polynomials come last
 asserted procedure basis_filter_redundant(basis: Basis): Basis;
     begin scalar j, isred, nonred, lead;
 
@@ -524,6 +572,8 @@ asserted procedure basis_filter_redundant(basis: Basis): Basis;
         return basis
     end;
 
+% This should be called for already computed basis
+% in order to ensure invariants in `f4_f4`
 asserted procedure basis_standardize_basis(ring: PolyRing, basis: Basis, 
                                             ht: MonomialHashtable, ord): Basis;
     begin scalar nonred, isred, lead, bcoeffs, bgens, idx, nlead;

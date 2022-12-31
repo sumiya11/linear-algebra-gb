@@ -1,7 +1,37 @@
 module f4f4;
-% The F4 implementation.
-% The heart of this package.
+% The F4 implementation. The heart of this package.
+% This file corresponds to file f4/f4.jl in Groebner.jl
 
+revision('f4f4, "$Id$");
+
+copyright('f4f4, "(c) 2023 A. Demin, T. Sturm, MPI Informatics, Germany");
+
+% Redistribution and use in source and binary forms, with or without
+% modification, are permitted provided that the following conditions
+% are met:
+%
+%    * Redistributions of source code must retain the relevant
+%      copyright notice, this list of conditions and the following
+%      disclaimer.
+%    * Redistributions in binary form must reproduce the above
+%      copyright notice, this list of conditions and the following
+%      disclaimer in the documentation and/or other materials provided
+%      with the distribution.
+%
+% THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+% "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+% LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+% A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+% OWNERS OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+% SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+% LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+% DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+% THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+% (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+% OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+%
+
+% Sort rows of the given matrix and call matrix reduction
 asserted procedure f4_reduction(ring: PolyRing, basis: Basis, matrixj: MacaulayMatrix, 
                                 ht: MonomialHashtable, symbol_ht: MonomialHashtable);
     <<
@@ -77,6 +107,7 @@ asserted procedure f4_initialize_structures_ff(ring: PolyRing, exponents: Vector
         return f4_initialize_structures_no_normalize(ring, exponents, coeffs, coeffs_ff, tablesize)
     end;
 
+% "Interreduce" the given basis inplace
 asserted procedure f4_reducegb(ring: PolyRing, basis: Basis, matrixj: MacaulayMatrix,
                                 ht: MonomialHashtable, symbol_ht: MonomialHashtable);
     begin scalar exponents, etmp, uprows, nonred, gens, up2coef, symdata, nrows,
@@ -593,7 +624,7 @@ asserted procedure f4_f4(ring: PolyRing, basis: Basis, ht: MonomialHashtable, re
 
         ASSERT(basis_bget_ndone(basis) = 0);
 
-        % Julia: in Reduce, Pairset initialization is moved here
+        % in Reduce, Pairset initialization is moved here
         pairset := basis_initialize_pairset();
 
         % matrixj storing coefficients in rows

@@ -1,5 +1,37 @@
 module f4modular;
+% Chinese remainder Th. and rational reconstruction.
+% This file corresponds to file arithmetic/modular.jl in Groebner.jl
 
+revision('f4modular, "$Id$");
+
+copyright('f4modular, "(c) 2023 A. Demin, T. Sturm, MPI Informatics, Germany");
+
+% Redistribution and use in source and binary forms, with or without
+% modification, are permitted provided that the following conditions
+% are met:
+%
+%    * Redistributions of source code must retain the relevant
+%      copyright notice, this list of conditions and the following
+%      disclaimer.
+%    * Redistributions in binary form must reproduce the above
+%      copyright notice, this list of conditions and the following
+%      disclaimer in the documentation and/or other materials provided
+%      with the distribution.
+%
+% THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+% "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+% LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+% A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+% OWNERS OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+% SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+% LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+% DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+% THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+% (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+% OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+%
+
+% Returns the last row of EEA of integers `a` and `m`
 asserted procedure modular_gcdext(a: Integer, m: Integer): List;
     begin integer buf, u1, u2, u3, v1, v2, v3,
                     buf1, buf2, buf3;
@@ -45,9 +77,21 @@ asserted procedure modular_invmod(a: Integer, m: Integer): Integer;
         return x
     end;
 
+% Used as a threshold in `modular_rational_reconstruction`:
+% as soon as an element in the remainder subsequence gets 
+% smaller than `modular_rational_reconstruction_bound`,
+% stop the iteration
 asserted procedure modular_rational_reconstruction_bound(modulo: Integer): Integer;
     isqrt(modulo / 2) + 1;
 
+% Rational number reconstruction.
+% given a pair of integers `a` and `m`, and a bound `bnd`,
+% return a unique rational number N/D, such that:
+%   N/D = a (mod m)
+% and
+%   N < bnd
+%
+% If such rational does not exist, nil is returned in the first position.
 asserted procedure modular_rational_reconstruction(bnd: Integer, a: Integer, m: Integer): DottedPair;
     begin scalar buf, u1, u2, u3, v1, v2, v3, result,
                     buf1, buf2, buf3, den, num;
@@ -112,7 +156,9 @@ asserted procedure modular_rational_reconstruction(bnd: Integer, a: Integer, m: 
         return result . (num ./ den)
     end;
 
-% in Julia, the function modifies its argument;
+% Chinese remainder reconstruction with precomputed multiplicative inverses.
+%
+% Julia: in Julia, the function modifies its argument;
 % Here we return the answer.
 asserted procedure modular_CRT(M: Integer, a1: Integer, minv1: Integer, 
                                 a2: Integer, minv2: Integer, m1: Integer, m2: Integer): Integer;

@@ -1,6 +1,41 @@
 module f4coeffs;
-% Polynomial coefficients manipulations
+% Polynomial coefficients manipulations: scaling and reconstruction.
+% This file corresponds to file gb/coeffs.jl in Groebner.jl
 
+revision('f4coeffs, "$Id$");
+
+copyright('f4coeffs, "(c) 2023 A. Demin, T. Sturm, MPI Informatics, Germany");
+
+% Redistribution and use in source and binary forms, with or without
+% modification, are permitted provided that the following conditions
+% are met:
+%
+%    * Redistributions of source code must retain the relevant
+%      copyright notice, this list of conditions and the following
+%      disclaimer.
+%    * Redistributions in binary form must reproduce the above
+%      copyright notice, this list of conditions and the following
+%      disclaimer in the documentation and/or other materials provided
+%      with the distribution.
+%
+% THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+% "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+% LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+% A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+% OWNERS OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+% SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+% LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+% DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+% THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+% (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+% OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+%
+
+% Here, Chinese Remainder reconstruction and Rational reconstruction are implemented.
+
+% struct CoeffAccum
+% CoeffAccum stores accumulated integer coefficients and
+% accumulated rational coefficients of a Groebner basis
 asserted procedure coeffs_CoeffAccum(): CoeffAccum;
     coeffs_CoeffAccum1(dv_undef(0), dv_undef(0), dv_undef(0));
 
@@ -31,6 +66,7 @@ asserted procedure coeffs_caset_prev_gb_coeffs_zz(ca: CoeffAccum, x): Vector;
 asserted procedure coeffs_caset_gb_coeffs_qq(ca: CoeffAccum, x): Vector;
     putv(ca, 3, x);
 
+% Given a vector of coefficients returns the lcm of all denominators in it 
 asserted procedure coeffs_common_denominator(coeffs: Vector): Integer;
     begin scalar den; 
         den := 1;
@@ -59,6 +95,7 @@ asserted procedure coeffs_scale_denominators1(coeffs_qq: Vector, coeffs_zz: Vect
         return coeffs_zz
     end;
 
+% Multiply each coefficient in the given vector by the vector common denominator
 asserted procedure coeffs_scale_denominators(coeffs_qq: Vector): Vector;
     begin scalar coeffs_zz;
         coeffs_zz := dv_undef(dv_length(coeffs_qq));
@@ -67,6 +104,8 @@ asserted procedure coeffs_scale_denominators(coeffs_qq: Vector): Vector;
         return coeffs_scale_denominators1(coeffs_qq, coeffs_zz)
     end;
 
+% Given a vector of coefficients coeffs_zz, reduces them modulo the given prime number,
+% and writes the result to `coeffs_ff`
 asserted procedure coeffs_reduce_modulo(coeffs_zz: Vector, coeffs_ff: Vector, prime);
     begin scalar p, buf, c, cfs_zz_i;
         p := prime;
@@ -112,6 +151,10 @@ asserted procedure coeffs_reconstruct_trivial_crt(coeffaccum: CoeffAccum, gb_coe
         >>
     end;
 
+% Recostructs the coefficients using Chinese Remainder Th.
+% Returns a unique vector of coefficients congruent to:
+%  - coefficients from `coeffaccum` modulo the product of all previous primes,
+%  - coefficients from `gb_coeffs_ff` modulo the given prime `ch`
 asserted procedure coeffs_reconstruct_crt(coeffaccum: CoeffAccum, primetracker: PrimeTracker, gb_coeffs_ff, ch: Integer);
     begin scalar buf, M, bigch, invm1, invm2, ca, cf, gb_coeffs_zz, prev_gb_coeffs_zz;
         if dv_isempty(coeffs_caget_gb_coeffs_qq(coeffaccum)) then <<
@@ -145,6 +188,11 @@ asserted procedure coeffs_reconstruct_crt(coeffaccum: CoeffAccum, primetracker: 
         lucky_updatemodulo(primetracker)
     end;
 
+% Recostructs the coefficients using Rational Reconstruction.
+% Two return values are possible:
+%  - nil, if reconstruction failed;
+%  - t, if reconstruction succeded. In that case, 
+%    correcrtly reconstructed coefficients are written inplace to `coeffaccum` 
 asserted procedure coeffs_reconstruct_modulo(coeffaccum: CoeffAccum, primetracker: PrimeTracker): Boolean;
     begin scalar success, modulo, bnd, gb_coeffs_zz, gb_coeffs_qq, result, buf, cz, cq;
 

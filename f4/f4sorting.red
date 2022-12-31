@@ -1,7 +1,43 @@
 module f4sorting;
-% Sorting routines used in f4
+% Sorting routines used in f4.
+% This file corresponds to file f4/sorting.jl in Groebner.jl 
 
-% degrevlex exponent vector comparator
+revision('f4sorting, "$Id$");
+
+copyright('f4sorting, "(c) 2023 A. Demin, T. Sturm, MPI Informatics, Germany");
+
+% Redistribution and use in source and binary forms, with or without
+% modification, are permitted provided that the following conditions
+% are met:
+%
+%    * Redistributions of source code must retain the relevant
+%      copyright notice, this list of conditions and the following
+%      disclaimer.
+%    * Redistributions in binary form must reproduce the above
+%      copyright notice, this list of conditions and the following
+%      disclaimer in the documentation and/or other materials provided
+%      with the distribution.
+%
+% THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+% "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+% LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+% A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+% OWNERS OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+% SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+% LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+% DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+% THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+% (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+% OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+%
+
+% Here, we want to use fast term orders on vectors for simple orders like
+% lex or revgradlex, and allow all other orders available through torder.
+% Thus, `sorting_exponent_isless` should be used as a generic comparator. 
+% It calls either our implementation, or the implementation in the dipoly package.
+% `sorting_exponent_isless` dispatches on the value of vdpsortmode!*.
+
+% Degrevlex exponent vector comparator
 asserted procedure sorting_exponent_isless_drl(ea: ExponentVector, eb: ExponentVector): Boolean;
     begin integer i;
         if f4_getvlast(ea) < f4_getvlast(eb) then
@@ -19,7 +55,17 @@ asserted procedure sorting_exponent_isless_drl(ea: ExponentVector, eb: ExponentV
             return t
     end;
 
-% lex exponent vector comparator
+% Deglex exponent vector comparator
+asserted procedure sorting_exponent_isless_dl(ea: ExponentVector, eb: ExponentVector): Boolean;
+    begin
+        if f4_getvlast(ea) < f4_getvlast(eb) then
+            return t
+        else if not (f4_getvlast(ea) = f4_getvlast(eb)) then
+            return nil;
+        return sorting_exponent_isless_lex(cdr ea, cdr eb)
+    end;
+
+% Lex exponent vector comparator
 asserted procedure sorting_exponent_isless_lex(ea: ExponentVector, eb: ExponentVector): Boolean;
     begin integer i;
         i := 1;
@@ -32,13 +78,30 @@ asserted procedure sorting_exponent_isless_lex(ea: ExponentVector, eb: ExponentV
             return nil
     end;
 
-% sorts terms and corresponding coefficients from the basis
+% Generic exponent vector comparator
+asserted procedure sorting_exponent_isless(e1: ExponentVector, e2: ExponentVector): Boolean;
+    begin scalar el1, el2, i, n;
+        return if vdpsortmode!* eq 'lex then
+            sorting_exponent_isless_lex(e1, e2)
+        else if vdpsortmode!* eq 'gradlex then
+            sorting_exponent_isless_dl(e1, e2)
+        else if vdpsortmode!* eq 'revgradlex then
+            sorting_exponent_isless_drl(e1, e2)
+        else <<
+            n := dv_length(e1);
+            el1 := for i := 1:n-1 collect getv(e1, i);
+            el2 := for i := 1:n-1 collect getv(e2, i);
+            evcomp(el1, el2) = -1
+        >>
+   end;
+
+asserted procedure sorting_comparator_sort_gens_by_lead_increasing(x, y);
+    sorting_exponent_isless(car x, car y);
+
+% Sorts terms and corresponding coefficients from the basis
 % by their leading term in non-decreasing order.
 %
 % Used only once to sort input generators
-asserted procedure sorting_comparator_sort_gens_by_lead_increasing(x, y);
-    sorting_exponent_isless_drl(car x, car y);
-
 asserted procedure sorting_sort_gens_by_lead_increasing(basis: Basis, ht: MonomialHashtable);
     begin scalar gens, exps, inds, coeffs, x;
         gens := basis_bget_gens(basis);
@@ -57,6 +120,7 @@ asserted procedure sorting_sort_gens_by_lead_increasing(basis: Basis, ht: Monomi
         >>
     end;
 
+% -//-
 asserted procedure sorting_sort_gens_by_lead_increasing2(basis: Basis, ht: MonomialHashtable, coeffs_zz: Vector);
     begin scalar gens, exps, inds, coeffs, x;
         gens := basis_bget_gens(basis);
@@ -77,8 +141,9 @@ asserted procedure sorting_sort_gens_by_lead_increasing2(basis: Basis, ht: Monom
     end;
 
 asserted procedure sorting_comparator_sort_input_to_change_ordering(x, y);
-    not sorting_exponent_isless_drl(car x, car y);
+    not sorting_exponent_isless(car x, car y);
 
+% Sort polynomials to change the order of terms if needed
 asserted procedure sorting_sort_input_to_change_ordering(exps, coeffs, ord);
     begin scalar inds, coeffs, x;
 
@@ -95,8 +160,9 @@ asserted procedure sorting_sort_input_to_change_ordering(exps, coeffs, ord);
     end;
 
 asserted procedure sorting_comparator_sort_gens_by_lead_increasing_in_standardize(x, y);
-    sorting_exponent_isless_drl(car x, car y);
+    sorting_exponent_isless(car x, car y);
 
+% Defined the order of polynomials in the output of f4
 asserted procedure sorting_sort_gens_by_lead_increasing_in_standardize(basis: Basis, ht: MonomialHashtable, ord);
     begin scalar gens, exps, nnr, lead, coeffs, inds, x;
         gens := basis_bget_gens(basis);
@@ -118,7 +184,7 @@ asserted procedure sorting_sort_gens_by_lead_increasing_in_standardize(basis: Ba
         >>
     end;
 
-% returns degree(x) < degree(y)
+% returns degree(x) < degree(y), where x and y are critical pairs
 asserted procedure sorting_comparator_sort_pairset_by_degree(x: SPair, y: SPair);
     basis_spget_deg(x) < basis_spget_deg(y);
 
@@ -138,6 +204,7 @@ asserted procedure sorting_sort_pairset_by_degree(ps: Pairset, from: Integer, sz
             putv(pairs, i, pop(part))
     end;
 
+% For sorting the rows in the upper part of the matrix.
 asserted procedure sorting_comparator_sort_matrix_rows_decreasing(a, b);
     begin scalar va, vb;
 
@@ -165,6 +232,7 @@ asserted procedure sorting_comparator_sort_matrix_rows_decreasing(a, b);
         return nil
     end;
 
+% For sorting the rows in the lower part of the matrix.
 asserted procedure sorting_comparator_sort_matrix_rows_increasing(a, b);
     begin scalar va, vb;
 
@@ -192,7 +260,7 @@ asserted procedure sorting_comparator_sort_matrix_rows_increasing(a, b);
         return nil
     end;
 
-% sort matrix rows by column index and density
+% Sort matrix rows by column index and density
 asserted procedure sorting_sort_matrix_rows_decreasing(matrixj: MacaulayMatrix);
     begin scalar inds, uprows, up2coef, x;
         % smaller means  pivot being more left  %
@@ -212,7 +280,7 @@ asserted procedure sorting_sort_matrix_rows_decreasing(matrixj: MacaulayMatrix);
         >>
     end;
 
-% sort matrix rows by column index and density
+% Sort matrix rows by column index and density
 asserted procedure sorting_sort_matrix_rows_increasing(matrixj: MacaulayMatrix);
     begin scalar inds, lowrows, low2coef, x;
         % smaller means  pivot being more left  %
@@ -232,8 +300,8 @@ asserted procedure sorting_sort_matrix_rows_increasing(matrixj: MacaulayMatrix);
         >>
     end;
 
-asserted procedure sorting_comparator_sort_pairset_by_lcm_drl(x, y);
-    sorting_exponent_isless_drl(cadr x, cadr y);
+asserted procedure sorting_comparator_sort_pairset_by_lcm(x, y);
+    sorting_exponent_isless(cadr x, cadr y);
 
 % sorts first npairs pairs from pairset by increasing of
 % lcm exponent wrt the given monomial ordering
@@ -245,7 +313,7 @@ asserted procedure sorting_sort_pairset_by_lcm(pairset: Pairset, npairs: Integer
         exps := hashtable_htget_exponents(ht);
 
         part := for i := 1:npairs collect {getv(ps, i), getv(exps, basis_spget_lcmj(getv(ps, i)))};
-        part := sort(part, 'sorting_comparator_sort_pairset_by_lcm_drl);
+        part := sort(part, 'sorting_comparator_sort_pairset_by_lcm);
 
         for i := 1:npairs do
             putv(ps, i, car pop(part))
@@ -263,7 +331,7 @@ asserted procedure sorting_sort_generators_by_position(gens: Vector, loadj: Inte
             putv(gens, i, pop(part))
     end;
 
-asserted procedure sorting_comparator_sorting_sort_columns_by_hash_drl(a, b);
+asserted procedure sorting_comparator_sorting_sort_columns_by_hash(a, b);
     begin scalar ha, hb, ea, eb;
         ha := cadr a;
         hb := cadr b;
@@ -271,7 +339,7 @@ asserted procedure sorting_comparator_sorting_sort_columns_by_hash_drl(a, b);
             return hashtable_hvget_idx(ha) > hashtable_hvget_idx(hb);
         ea := caddr a;
         eb := caddr b;
-        return not sorting_exponent_isless_drl(ea, eb)
+        return not sorting_exponent_isless(ea, eb)
     end;
 
 asserted procedure sorting_sort_columns_by_hash(col2hash: Vector, symbol_ht: MonomialHashtable);
@@ -283,7 +351,7 @@ asserted procedure sorting_sort_columns_by_hash(col2hash: Vector, symbol_ht: Mon
         listtosort := for i := 1:dv_length(col2hash) collect 
             {getv(col2hash, i), getv(hd, getv(col2hash, i)), getv(es, getv(col2hash, i))};
         
-        listtosort := sort(listtosort, 'sorting_comparator_sorting_sort_columns_by_hash_drl);
+        listtosort := sort(listtosort, 'sorting_comparator_sorting_sort_columns_by_hash);
 
         for i := 1:dv_length(col2hash) do
             putv(col2hash, i, car pop(listtosort))
