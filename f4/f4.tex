@@ -5,15 +5,20 @@
 \usepackage[english]{babel}
 \usepackage{amssymb}
 \usepackage{xcolor}
+\usepackage{url}
 
 \newcommand{\grobner}{Gr\"obner}
-\newcommand{\faugere}{Faug\`ere}
+\newcommand{\faugere}{Faug\'ere}
 \newcommand{\code}[1]{\texttt{#1}}
 
 \begin{document}
 \title{F4: Computing Gröbner Bases Using F4}
 
-\author{Alexander Demin\footnote{Corresponding author, email: \texttt{asdemin\_2@edu.hse.ru}}, Hamid Rahkooy\\
+\author{
+  Alexander Demin\\
+  MPI Informatics, Saarland Informatics Campus, Germany\\
+  \texttt{alexander.demin.eternal@gmail.com}\\
+  Hamid Rahkooy\\
   MPI Informatics, Saarland Informatics Campus, Germany\\
   \texttt{hrahkooy@mpi-inf.mpg.de}
   \and
@@ -34,12 +39,13 @@ orderings, as used with the GROEBNER package and the CGB package. Some package u
 presented in Section~\ref{SE:usage} and in the package test file
 \code{f4.tst}.
 
-The F4 algorithm is highly popular among practitioners. It settled in the core of \grobner{} bases
+The F4 algorithm is highly popular among practitioners and settled in the core of \grobner{} bases
 computation routines in leading computer algebra systems. The efficiency of F4 partly comes from 
-employing Gaussian elimination for polynomial reductions, 
+using Gaussian elimination for polynomial reductions, 
 which allows the use of highly optimized linear algebra kernels in the implementation.
 
-This package is migrated from the Julia package Groebner.jl. 
+This package is migrated from the Julia package Groebner.jl version 0.2.10.
+Groebner.jl is available at \url{https://github.com/sumiya11/Groebner.jl}, last accessed on February 2023.
 The implementation utilizes several modern symbolic computation techniques, 
 such as monomial hashtables, monomial divisibility masks, and specialized row-reduction algorithms.
 
@@ -155,20 +161,21 @@ During the package implementation and benchmarking stage we have observed severa
 %
 \begin{description}
 	\item REDUCE Standard Quotient implementation of rational numbers is competitive to GNU GMP \cite{GMP}
-	on the most of our benchmarks.
+    internally used by Julia on the most of our benchmarks.
 	Still, expression swell occurring in F4 matrices is too severe to forgo modular computations;
 	%
 	\item The best strategy for Gr{\"o}ebner bases modular computation usually is 
-	to pick the largest possible ``register size'' moduli. The portability of REDUCE imposes 
-	a hard limit on the maximal size of an unboxed integer, which might complicate selection 
-	of large enough moduli for efficient arithmetic modulo a prime.
+	to pick the largest possible ``register size'' moduli, since fast modular arithmetic could be implemented then. 
+    The portability guarantees of REDUCE impose a limit on the maximal safe size of an unboxed integer, 
+    which might complicate selection of large enough moduli.
 	In our implementation, we select the size of the moduli dynamically based on 
 	the platform we are running on.
 	% 
 	\item The fact that REDUCE package needs to support a multitude of 
 	possible LISP implementations might cap the effectiveness of manual 
-	low-level code optimization. While Julia version of this package benefits 
-	from vectorization and permits unsafe and fast memory manipulations, 
+	code optimizations.
+    While Julia version of this package benefits from vectorization and permits 
+    unsafe and fast memory manipulations, 
 	REDUCE must operate on a higher and safer level of abstraction.
 \end{description}
 
@@ -186,7 +193,7 @@ Torbj{\"o}rn Granlund and the GMP development team.
 \newblock \emph{http://gmplib.org/}, 2012
 
 \bibitem[F99]{F4}
-Jean~Charles Faugère.
+Jean~Charles Faug\'ere.
 \newblock {A} new efficient algorithm for computing {G}r{\"o}bner bases ({F}4).
 \newblock {\em Journal of Pure and Applied Algebra}, vol. 139(1), pages 61--88., 1999.
 
